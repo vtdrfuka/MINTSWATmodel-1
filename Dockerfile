@@ -20,6 +20,6 @@ RUN mkdir /mintswat/
 #  && install2.r --error hsdar \
 #  && install2.r --error lidR \
 #  && Rscript -e "library(devtools); install_github('jhollist/elevatr')"
-RUN Rscript -e 'if (!require("pacman")) install.packages("pacman"); pacman::p_load(operators, topmodel, DEoptim, XML,data.table); system("svn checkout svn://scm.r-forge.r-project.org/svnroot/ecohydrology/"); install.packages(c("ecohydrology/pkg/EcoHydRology/","ecohydrology/pkg/SWATmodel/"),repos = NULL)' 
+RUN Rscript -e 'if (!require("pacman")) install.packages("pacman"); pacman::p_load(operators, topmodel, DEoptim, XML,data.table,RSQLite); system("svn checkout svn://scm.r-forge.r-project.org/svnroot/ecohydrology/"); install.packages(c("ecohydrology/pkg/EcoHydRology/","ecohydrology/pkg/SWATmodel/"),repos = NULL)' 
 WORKDIR /mintswat
 #CMD 
