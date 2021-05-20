@@ -1,8 +1,8 @@
 # MINTSWATmodel
 Curently pulls standard ArcSWAT structured initialization out of repository into: \
-~/docker/MINTSWATmodel/mintswat/ 
-runs currrent SWAT2012 model, and exports the output.[hru,sub,rch] SWAT output files into SQLite tables in:
-~/docker/MINTSWATmodel/mintswat/MINTSWATmodel_output/MINTSWATtables.sqlite
+~/docker/MINTSWATmodel/mintswat/ \
+runs currrent SWAT2012 model, and exports the output.[hru,sub,rch] SWAT output files into SQLite tables in: \
+~/docker/MINTSWATmodel/mintswat/MINTSWATmodel_output/MINTSWATtables.sqlite \
 
 
 ```
