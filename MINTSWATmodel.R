@@ -1,16 +1,15 @@
 pacman::p_load(SWATmodel,RSQLite)
-url="https://github.com/vtdrfuka/MINTSWATmodel/raw/main/tb_s2.zip"
-download.file(url,"file.zip")
-unzip("file.zip")
-dir.create("/mintswat/MINTSWATmodel_output")
-setwd("/mintswat/Scenarios/Default/TxtInOut/")
+#url="https://github.com/vtdrfuka/MINTSWATmodel/raw/main/tb_s2.zip"
+#download.file(url,"file.zip")
+dir.create("./MINTSWATmodel_output")
+setwd("./Scenarios/Default/TxtInOut/")
 runSWAT2012()
 output_hru=readSWAT("hru",".")
 output_sub=readSWAT("sub",".")
 output_rch=readSWAT("rch",".")
-con <- dbConnect(RSQLite::SQLite(), "/mintswat/MINTSWATmodel_output/MINTSWATtables.sqlite")
+setwd("../../../")
+con <- dbConnect(RSQLite::SQLite(), "./MINTSWATmodel_output/MINTSWATtables.sqlite")
 dbWriteTable(con, "output_hru", output_hru)
 dbWriteTable(con, "output_rch", output_rch)
 dbWriteTable(con, "output_sub", output_sub)
 dbListTables(con)
-
