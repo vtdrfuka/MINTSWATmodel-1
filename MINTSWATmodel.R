@@ -5,6 +5,7 @@
 #cd mintswat/
 #unzip tb_s2.zip
 #cd ../
+#docker run -dt -v ~/docker/MINTSWATmodel/mintswat/:/mintswat --name mint_swat mintswatmodel
 #docker exec -it mint_swat Rscript MINTSWATmodel.R 
 ## To run with parameter changes
 #docker exec -it mint_swat Rscript MINTSWATmodel.R -p GW_DELAY:12 -p CN2:75:00\*.mgt -s test1
