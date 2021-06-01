@@ -9,5 +9,5 @@ RUN apt-get -y --fix-missing install vim libxml2-dev libz-dev gdal-bin libudunit
 RUN apt-get clean
 RUN mkdir /mintswat/
 
-RUN Rscript -e 'if (!require("pacman")) install.packages("pacman"); pacman::p_load(operators, topmodel, DEoptim, XML,data.table,RSQLite); system("svn checkout svn://scm.r-forge.r-project.org/svnroot/ecohydrology/"); install.packages(c("ecohydrology/pkg/EcoHydRology/","ecohydrology/pkg/SWATmodel/"),repos = NULL)' 
+RUN Rscript -e 'if (!require("pacman")) install.packages("pacman"); pacman::p_load(operators, topmodel, DEoptim, XML,data.table,RSQLite,argparse,stringi); system("svn checkout svn://scm.r-forge.r-project.org/svnroot/ecohydrology/"); install.packages(c("ecohydrology/pkg/EcoHydRology/","ecohydrology/pkg/SWATmodel/"),repos = NULL)' 
 WORKDIR /mintswat
