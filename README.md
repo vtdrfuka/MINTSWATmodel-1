@@ -14,18 +14,25 @@ docker run -dt -v ~/docker/MINTSWATmodel/mintswat/:/mintswat --name mint_swat dr
 docker run --rm -v ~/docker/MINTSWATmodel/:/mintswat curlimages/curl https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/MINTSWATmodel.R -o /mintswat/MINTSWATmodel.R
 
 # Build based (SKIP if you did docker pull based)
-mkdir -p ~/docker/MINTSWATmodel
+mkdir -p ~/docker/MINTSWATmodel/mintswat
 cd ~/docker/MINTSWATmodel/
-docker run --name MINTSWATmodel alpine/git clone https://github.com/vtdrfuka/MINTSWATmodel.git
-docker cp MINTSWATmodel:/git/MINTSWATmodel/Dockerfile ~/docker/MINTSWATmodel/
-docker cp MINTSWATmodel:/git/MINTSWATmodel/MINTSWATmodel.R ~/docker/MINTSWATmodel/
-docker build -t mintswatmodel .
-docker run -dt -v ~/docker/MINTSWATmodel/mintswat/:/mintswat --name mint_swat mintswatmodel
+curl https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/MINTSWATmodel.R > mintswat/MINTSWATmodel.R
+curl https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip > mintswat/tb_s2.zip
+curl https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/Dockerfile > Dockerfile
+cd mintswat/
+unzip tb_s2.zip
+cd ../
+docker build -t mintswatmodel:latest .
+docker run -dt -v ~/docker/MINTSWATmodel/mintswat/:/mintswat --name mint_swat mintswatmodel:latest
 
 # Script-based Session
-cd ~/docker/MINTSWATmodel/
-cp MINTSWATmodel.R mintswat/
-docker exec -it mint_swat R -f MINTSWATmodel.R
+# Help without run
+docker exec -it mint_swat Rscript MINTSWATmodel.R --help
+# To run without parameter changes
+docker exec -it mint_swat Rscript MINTSWATmodel.R 
+# To run with parameter changes
+docker exec -it mint_swat Rscript MINTSWATmodel.R -p GW_DELAY:12 -p CN2:75:00\*.mgt -s test1
+# Kill and Cleanup
 docker kill mint_swat;docker rm mint_swat
 
 # Check for data in the SQLite tables
