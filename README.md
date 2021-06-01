@@ -31,7 +31,7 @@ docker exec -it mint_swat Rscript MINTSWATmodel.R --help
 # To run without parameter changes
 docker exec -it mint_swat Rscript MINTSWATmodel.R 
 # To run with parameter changes
-docker exec -it mint_swat Rscript MINTSWATmodel.R -p GW_DELAY:12 -p CN2:75:00\*.mgt -s test1
+docker exec -it mint_swat Rscript MINTSWATmodel.R -p GW_DELAY:12 -p CN2:75:00*[2-5].mgt -s test1
 # Kill and Cleanup
 docker kill mint_swat;docker rm mint_swat
 
