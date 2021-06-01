@@ -24,6 +24,10 @@ unzip tb_s2.zip
 cd ../
 docker build -t mintswatmodel:latest .
 docker run -v ~/docker/MINTSWATmodel/mintswat/:/mintswat --name mint_swat_single mintswatmodel:latest Rscript MINTSWATmodel.R --help
+# To run without parameter changes
+docker run -v ~/docker/MINTSWATmodel/mintswat/:/mintswat --name mint_swat_single mintswatmodel:latest Rscript MINTSWATmodel.R
+# To run with parameter changes
+docker run -v ~/docker/MINTSWATmodel/mintswat/:/mintswat --name mint_swat_single mintswatmodel:latest Rscript MINTSWATmodel.R -p GW_DELAY:12 -p CN2:75:00*[2-5].mgt -s test1
 # or to leave runninig
 docker run -dt -v ~/docker/MINTSWATmodel/mintswat/:/mintswat --name mint_swat mintswatmodel:latest
 
