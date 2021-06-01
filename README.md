@@ -23,6 +23,8 @@ cd mintswat/
 unzip tb_s2.zip
 cd ../
 docker build -t mintswatmodel:latest .
+docker run -v ~/docker/MINTSWATmodel/mintswat/:/mintswat --name mint_swat_single mintswatmodel:latest Rscript MINTSWATmodel.R --help
+# or to leave runninig
 docker run -dt -v ~/docker/MINTSWATmodel/mintswat/:/mintswat --name mint_swat mintswatmodel:latest
 
 # Script-based Session
