@@ -35,7 +35,7 @@ if(!is.null(args$swatscen)){
   alter_files(calib_params)
 }
 
-runSWAT2012()
+runSWAT2012(rch = 1)
 output_hru=readSWAT("hru",".")
 output_sub=readSWAT("sub",".")
 output_rch=readSWAT("rch",".")
