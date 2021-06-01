@@ -1,3 +1,15 @@
+#rm -rf mintswat
+#mkdir mintswat
+#curl https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/MINTSWATmodel.R > mintswat/MINTSWATmodel.R
+#curl https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip > mintswat/tb_s2.zip
+#cd mintswat/
+#unzip tb_s2.zip
+#cd ../
+#docker exec -it mint_swat Rscript MINTSWATmodel.R 
+## To run with parameter changes
+#docker exec -it mint_swat Rscript MINTSWATmodel.R -p GW_DELAY:12 -p CN2:75:00\*.mgt -s test1
+## And the help without run
+#docker exec -it mint_swat Rscript MINTSWATmodel.R --help
 pacman::p_load(SWATmodel,RSQLite,argparse,stringi)
 dir.create("./MINTSWATmodel_output")
 setwd("./Scenarios/Default/TxtInOut/")
