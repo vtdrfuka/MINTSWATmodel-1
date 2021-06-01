@@ -8,10 +8,6 @@ runs current SWAT2012 model, and exports the output.[hru,sub,rch] SWAT output fi
 ```
 # Docker Hub PULL Based (SKIP if you want to build from git)
 docker pull drfuka/mintswatmodel:latest
-mkdir -p ~/docker/MINTSWATmodel
-cd ~/docker/MINTSWATmodel/
-docker run -dt -v ~/docker/MINTSWATmodel/mintswat/:/mintswat --name mint_swat drfuka/mintswatmodel:latest
-docker run --rm -v ~/docker/MINTSWATmodel/:/mintswat curlimages/curl https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/MINTSWATmodel.R -o /mintswat/MINTSWATmodel.R
 
 # Build based (SKIP if you did docker pull based)
 mkdir -p ~/docker/MINTSWATmodel/mintswat
