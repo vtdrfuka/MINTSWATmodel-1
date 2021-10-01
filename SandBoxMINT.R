@@ -3,8 +3,8 @@
 #
 pacman::p_load(moments,sqldf,curl,readr,SWATmodel)
 source("https://raw.githubusercontent.com/Rojakaveh/FillMissWX/main/FillMissWX.R")
-source("https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/FillMissWX.R")
-source("https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/FillMissWX.R")
+source("https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/get_grdc_gage.R")
+source("https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/build_wgn_file.R")
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/SWATmodel/R/readSWAT.R?root=ecohydrology")
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/EcoHydRology/R/setup_swatcal.R?root=ecohydrology")
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/EcoHydRology/R/swat_objective_function_rch.R?root=ecohydrology")
