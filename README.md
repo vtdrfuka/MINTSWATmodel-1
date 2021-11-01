@@ -4,10 +4,15 @@ Currently pulls standard ArcSWAT structured initialization out of repository
 
 ## How to use?
 
-Start the container
+Create the Docker Image. This image is using [R base image](https://github.com/mintproject/swatbase). Please, add new dependencies on it.
 
 ```bash
 $ docker build  -t mintproject/MINTSWATmodel .
+```
+
+Run the image
+
+```bash
 $ docker run -ti mintproject/MINTSWATmodel bash
 ```
 
