@@ -1,4 +1,6 @@
-# MINTSWATmodel
+# MINTSWATmodel [![Tests](https://github.com/mintproject/MINTSWATmodel/actions/workflows/test.yml/badge.svg)](https://github.com/mintproject/MINTSWATmodel/actions/workflows/test.yml)
+
+
 Currently pulls standard ArcSWAT structured initialization out of repository into: \
 ~/docker/MINTSWATmodel/mintswat/ \
 runs current SWAT2012 model, and exports the output.[hru,sub,rch] SWAT output files into SQLite tables in: \
