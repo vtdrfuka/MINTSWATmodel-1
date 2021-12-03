@@ -21,6 +21,8 @@ parser$add_argument("-p","--swatparam", action="append", metavar="param:val[:reg
     help = "Add in SWAT parameters that need to be modified")
 parser$add_argument("-s","--swatscen", metavar="scen1",
     help = "Scenario folder name")
+parser$add_argument("-u","--url", metavar="dataurl",
+    help = "The URL for generalized base data to be used")
 args <- parser$parse_args()
 print(args$swatscen)
 if(!is.null(args$swatscen)){
