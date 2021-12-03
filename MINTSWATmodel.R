@@ -13,6 +13,7 @@
 #docker exec -it mint_swat Rscript MINTSWATmodel.R --help
 pacman::p_load(SWATmodel,RSQLite,argparse,stringi)
 dir.create("./MINTSWATmodel_output")
+dir.create("./MINTSWATmodel_input")
 setwd("./Scenarios/Default/TxtInOut/")
 load(paste(path.package("EcoHydRology"), "data/change_params.rda", sep = "/"))
 # If a parameter change scenario, we use --swatscen
