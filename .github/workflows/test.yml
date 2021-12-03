@@ -22,7 +22,7 @@ jobs:
           docker build . --tag $IMAGE_NAME
       - name: Test R script
         run: |
-          docker run -t ${IMAGE_NAME} Rscript  SandBoxMINT.R 
+          docker run -t ${IMAGE_NAME} Rscript MINTSWATmodel.R 
           
       - name: Login to DockerHub
         uses: docker/login-action@v1
