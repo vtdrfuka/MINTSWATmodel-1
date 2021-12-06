@@ -21,7 +21,7 @@ setwd("~/");dir.create("./MINTSWATmodel_input")
 # 
 
 
-grdcurl="https://portal.grdc.bafg.de/grdcdownload/external/bd9d12a7-8bee-48e5-a51e-d1aba6b8e036/2021-10-08_18-10.zip"
+grdcurl="https://github.com/mosoriob/swattestdata/blob/master/2021-12-02_05-20.zip?raw=true"
 setwd("./MINTSWATmodel_input")
 download.file(grdcurl,"grdc.zip")
 unzip("grdc.zip")
