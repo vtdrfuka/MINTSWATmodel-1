@@ -1,5 +1,4 @@
-name: Docker
-
+name: MINTSWATModel.R
 on:
   push:
     branches:
@@ -22,7 +21,7 @@ jobs:
           docker build . --tag $IMAGE_NAME
       - name: Test R script
         run: |
-          docker run -t ${IMAGE_NAME} Rscript MINTSWATmodel.R 
+          docker run -t ${IMAGE_NAME} Rscript MINTSWATmodel.R -u https://github.com/mosoriob/swattestdata/blob/master/2021-12-02_05-20.zip?raw=true
           
       - name: Login to DockerHub
         uses: docker/login-action@v1
