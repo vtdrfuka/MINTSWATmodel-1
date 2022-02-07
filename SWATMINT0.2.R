@@ -1,5 +1,5 @@
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(SWATmodel,RSQLite,argparse,stringi,stringr,rgdal,ggplot2,rgeos,rnoaa,moments,sf,readr)
+pacman::p_load(SWATmodel,RSQLite,argparse,stringi,stringr,rgdal,ggplot2,rgeos,rnoaa,moments,sf,readr,tools)
 source("https://raw.githubusercontent.com/Rojakaveh/FillMissWX/main/FillMissWX.R")
 source("https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/build_wgn_file.R")
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/SWATmodel/R/readSWAT.R?root=ecohydrology")
@@ -28,26 +28,41 @@ parser$add_argument("-d","--swatiniturl", metavar="url to ArcSWAT init or GRDC f
 # geojson example 
 exampleurl="-d https://data.mint.isi.edu/files/files/geojson/guder.json"
 # GRDC example 
-exampleurl="-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip"
+# exampleurl="-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip"
 # ArcSWAT example 
-# exampleurl="-d https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip"
+exampleurl="-d https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip"
 #
-args <- parser$parse_args(c(exampleurl,"-s calib01"))
+args <- parser$parse_args()
+if(is.null(args$swatiniturl)){
+   args <- parser$parse_args(c(exampleurl,"-s calib01"))
+}
+print(paste0("This run's args: ",args))
 dlfilename=basename(args$swatiniturl)
-download.file(trimws(args$swatiniturl),"data.zip")
-if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
-  print("GRDC Format Uninitialized")
-}    
+dlurl=trimws(args$swatiniturl)
+# *** download
+dlfiletype=file_ext(dlfilename)
+if(dlfiletype=="json"){
+  print("geojson single run")
+  download.file(dlurl,paste0("data.",dlfiletype))
+  swatrun="basic"
+  } else {
+  print("different")
+  dlfiletype="zip"
+  download.file(dlurl,paste0("data.",dlfiletype))
+  if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
+     swatrun="GRDC"
+  }    
+}
 
-if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
-  print("GRDC")
+if(swatrun=="GRDC"){
+  print("GRDC Format Uninitialized")
   dir.create("GRDCstns")
   setwd("GRDCstns")
   currentdir=getwd()
   unzip("../data.zip")
   stationbasins_shp=readOGR("stationbasins.geojson")
-  for(filename in list.files(pattern = "_Q_Day")){
-#  for(filename in list.files(pattern = "_Q_Day")[2]){
+#  for(filename in list.files(pattern = "_Q_Day")){
+  for(filename in list.files(pattern = "_Q_Day")[2]){
       #    filename=list.files(pattern = "_Q_Day")[2]
     print(filename)    
     setwd(currentdir)
@@ -139,55 +154,7 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
   }
 }
 
-if(substr(trimws(args$swatscen),1,5)=="calib"){
-  test2=subset(output_rch, output_rch$RCH == 3)
-  test2=merge(test2,flowgage$flowdata,by="mdate")
-  plot(test2$mdate,test2$FLOW_OUTcms,type="l")
-  lines(test2$mdate,test2$flow,type="l",col="blue")
-  plot(test2$FLOW_OUTcms,test2$flow)
-  save(readSWAT,file="readSWAT.R")
-  
-  change_params=""
-  rm(change_params)
-  load(paste(path.package("EcoHydRology"), "data/change_params.rda", sep = "/"))
-  calib_range=c("1999-12-31","2021-12-31")
-  params_select=c(1,2,3,4,5,6,7,8,9,10,11,14,19,21,23,24,32,33)
-  calib_params=change_params[params_select,]
-  
-  calib_params[grep("Ksat",calib_params[,"parameter"]),c("min","max","current")]=c(.5,1.5,1)
-  calib_params[grep("SMFMN",calib_params[,"parameter"]),c("min","max","current")]=c(0,5,2.5)
-  calib_params[grep("SMFMX",calib_params[,"parameter"]),c("min","max","current")]=c(0,5,2.5)
-  calib_params[grep("CN2",calib_params[,"parameter"]),c("min","max","current")]=c(35,95,70)
-  calib_params[grep("Depth",calib_params[,"parameter"]),c("min","max","current")]=c(.5,2,1)
-  calib_params[grep("Ave",calib_params[,"parameter"]),c("min","max","current")]=c(.5,2,1)
-  calib_params[grep("ALPHA_BF",calib_params[,"parameter"]),c("min","max","current")]=c(.01,1,.8)
-  calib_params[grep("GWQMN",calib_params[,"parameter"]),c("min","max","current")]=c(.1,600,1)
-  calib_params[grep("GW_REVAP",calib_params[,"parameter"]),c("min","max","current")]=c(0,.3,.02)
-  
-  setup_swatcal(calib_params)
-  rch=3
-  
-  # Test calibration
-  x=calib_params$current
-  swat_objective_function_rch(x,calib_range,calib_params,flowgage,rch,save_results=F)
-  outDEoptim<-DEoptim(swat_objective_function_rch,calib_params$min,calib_params$max,
-                      DEoptim.control(strategy = 6,NP = 16,itermax=5,parallelType = 1,
-                                      packages = c("SWATmodel")),calib_range,calib_params,flowgage,rch)
-  x=outDEoptim$optim$bestmem  # need to save this, along with an ArcSWAT like directory structure for the basin  
-  # mkdir -p Scenarios/Default/TxtInOut
-  
-  #  dev.copy(png, file = "geyserplot.png")
-  #  dev.off()
-  #  dev.off()
-}
-
-args <- parser$parse_args(c("-d https://data.mint.isi.edu/files/files/geojson/guder.json"))
-#args <- parser$parse_args()
-print(args)
-
-if(!is.null(args$swatiniturl)){
-  args$swatiniturl=str_trim(args$swatiniturl,side = c("both"))
-  dlfilename=basename(args$swatiniturl)
+if(dlfiletype=="json"){
   basinname=strsplit(basename(args$swatiniturl),split = "\\.")[[1]][1]
   download.file(args$swatiniturl,dlfilename)
   basin=readOGR(dlfilename)
@@ -237,13 +204,56 @@ if(!is.null(args$swatiniturl)){
   
 }
 
+
+if(substr(trimws(args$swatscen),1,5)=="calib"){
+  test2=subset(output_rch, output_rch$RCH == 3)
+  test2=merge(test2,flowgage$flowdata,by="mdate")
+  plot(test2$mdate,test2$FLOW_OUTcms,type="l")
+  lines(test2$mdate,test2$flow,type="l",col="blue")
+  plot(test2$FLOW_OUTcms,test2$flow)
+  save(readSWAT,file="readSWAT.R")
+  
+  change_params=""
+  rm(change_params)
+  load(paste(path.package("EcoHydRology"), "data/change_params.rda", sep = "/"))
+  calib_range=c("1999-12-31","2021-12-31")
+  params_select=c(1,2,3,4,5,6,7,8,9,10,11,14,19,21,23,24,32,33)
+  calib_params=change_params[params_select,]
+  
+  calib_params[grep("Ksat",calib_params[,"parameter"]),c("min","max","current")]=c(.5,1.5,1)
+  calib_params[grep("SMFMN",calib_params[,"parameter"]),c("min","max","current")]=c(0,5,2.5)
+  calib_params[grep("SMFMX",calib_params[,"parameter"]),c("min","max","current")]=c(0,5,2.5)
+  calib_params[grep("CN2",calib_params[,"parameter"]),c("min","max","current")]=c(35,95,70)
+  calib_params[grep("Depth",calib_params[,"parameter"]),c("min","max","current")]=c(.5,2,1)
+  calib_params[grep("Ave",calib_params[,"parameter"]),c("min","max","current")]=c(.5,2,1)
+  calib_params[grep("ALPHA_BF",calib_params[,"parameter"]),c("min","max","current")]=c(.01,1,.8)
+  calib_params[grep("GWQMN",calib_params[,"parameter"]),c("min","max","current")]=c(.1,600,1)
+  calib_params[grep("GW_REVAP",calib_params[,"parameter"]),c("min","max","current")]=c(0,.3,.02)
+  
+  setup_swatcal(calib_params)
+  rch=3
+  
+  # Test calibration
+  x=calib_params$current
+  swat_objective_function_rch(x,calib_range,calib_params,flowgage,rch,save_results=F)
+  outDEoptim<-DEoptim(swat_objective_function_rch,calib_params$min,calib_params$max,
+                      DEoptim.control(strategy = 6,NP = 16,itermax=5,parallelType = 1,
+                                      packages = c("SWATmodel")),calib_range,calib_params,flowgage,rch)
+  x=outDEoptim$optim$bestmem  # need to save this, along with an ArcSWAT like directory structure for the basin  
+  # mkdir -p Scenarios/Default/TxtInOut
+  
+  #  dev.copy(png, file = "geyserplot.png")
+  #  dev.off()
+  #  dev.off()
+}
+
+print(args)
+stop()
+
 # https://www.nature.com/articles/s41597-019-0155-x Reference dataset
 #CN250url="https://figshare.com/ndownloader/files/15377363"
 #download.file(CN250url,"GCN250_ARCII.tif")
 
-
-
-urlpath=""
 setwd("./Scenarios/Default/TxtInOut/")
 load(paste(path.package("EcoHydRology"), "data/change_params.rda", sep = "/"))
 
@@ -296,3 +306,4 @@ SWATidal = read.fortran(textConnection(readLines(cfilename)[11]), "f20")[1,]
 startdate=as_date(paste0(SWATiyr,"-01-01")) + SWATidaf -1
 enddate=as_date(paste0(SWATiyr+SWATnbyr -1,"-01-01")) + SWATidal -1
 AllDays=data.frame(date=seq(startdate, by = "day", length.out = enddate-startdate+1))
+
