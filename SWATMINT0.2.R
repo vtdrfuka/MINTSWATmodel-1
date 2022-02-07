@@ -8,23 +8,37 @@ source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/EcoHydRology
 source("https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/get_grdc_gage.R")
 
 setwd("~")
-dir.create("./MINTSWATmodel_output")
-dir.create("./MINTSWATmodel_input")
-setwd("./MINTSWATmodel_input")
-Sys.setenv(R_USER_CACHE_DIR="./MINTSWATmodel_output")
+basedir=getwd()
+outbasedir=paste0(basedir,"/MINTSWATmodel_output")
+inbasedir=paste0(basedir,"/MINTSWATmodel_input")
+dir.create(outbasedir)
+dir.create(inbasedir)
+setwd(inbasedir)
+Sys.setenv(R_USER_CACHE_DIR=inbasedir)
 # If a parameter change scenario, we use --swatscen
 parser <- ArgumentParser()
 parser$add_argument("-p","--swatparam", action="append", metavar="param:val[:regex_file]",
                     help = "Add in SWAT parameters that need to be modified")
 parser$add_argument("-s","--swatscen", metavar="scen1",
                     help = "Scenario folder name")
-parser$add_argument("-d","--swatiniturl", metavar="url or tinyurl ext",
+parser$add_argument("-d","--swatiniturl", metavar="url to ArcSWAT init or GRDC format dataset",
                     help = "Scenario folder name")
-# Example GeoJSON 15cKb96URjHYDWjiuw75BqyPs25a2UYvu
-# https://drive.google.com/file/d/1Bs3OUmSALsPvGCTTg06NFvlPOORbKMZI/view?usp=sharing
-gle="1Bs3OUmSALsPvGCTTg06NFvlPOORbKMZI"
-msurl=paste0("https://docs.google.com/a/vt.edu/uc?id=",gle,"&export=download")
-download.file(msurl,"data.zip")
+
+# Examples:
+# geojson example 
+exampleurl="-d https://data.mint.isi.edu/files/files/geojson/guder.json"
+# GRDC example 
+exampleurl="-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip"
+# ArcSWAT example 
+# exampleurl="-d https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip"
+#
+args <- parser$parse_args(c(exampleurl))
+dlfilename=basename(args$swatiniturl)
+download.file(trimws(args$swatiniturl),"data.zip")
+if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
+  print("GRDC Format Uninitialized")
+}    
+
 if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
   print("GRDC")
   dir.create("GRDCstns")
@@ -32,26 +46,36 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
   unzip("../data.zip")
   stationbasins_shp=readOGR("stationbasins.geojson")
   for(filename in list.files(pattern = "_Q_Day")){
+#    filename=list.files(pattern = "_Q_Day")[2]
     print(filename)    
-    filename=list.files(pattern = "_Q_Day")[2]
     flowgage=get_grdc_gage(filename)
+    basinid=strsplit(filename,"_")[[1]][1]
     if(is.character(flowgage)){next()}
     GRDC_mindate=min(flowgage$flowdata$mdate)
     GRDC_maxdate=max(flowgage$flowdata$mdate)
     # Depends on: rnoaa, lubridate::month,ggplot2
     declat=flowgage$declat
-    declat=flowgage$declon
+    declon=flowgage$declon
     proj4_utm = paste0("+proj=utm +zone=", trunc((180+declon)/6+1), " +datum=WGS84 +units=m +no_defs")
     print(proj4_utm)
-#    basinutm=spTransform(basin,CRS(proj4_utm))
     basin_area=flowgage$area
+    if(length(try(which(stationbasins_shp$grdc_no==as.numeric(flowgage$id))))>0){
+      basinloc=which(stationbasins_shp$grdc_no==as.numeric(flowgage$id))
+      basin=stationbasins_shp[basinloc,]
+      basinutm=spTransform(basin,CRS(proj4_utm))
+      wxlat=gCentroid(basin)$y
+      wxlon=gCentroid(basin)$x
+    } else {
+      wxlat=declat
+      wxlon=declon
+    }
     stradius=20;minstns=30
     station_data=ghcnd_stations()
     while(stradius<2000){
       print(stradius)
       junk=meteo_distance(
         station_data=station_data,
-        lat=gCentroid(basin)$y, long=gCentroid(basin)$x,
+        lat=wxlat, long=wxlon,
         units = "deg",
         radius = stradius,
         limit = NULL
@@ -59,7 +83,9 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
       if(length(unique(junk$id))>minstns){break()}
       stradius=stradius*1.2
     }
-    pdf(file = "WXSummary.pdf",width = 6,height = 4)
+    basindir=paste0(outbasedir,"/",basinid)
+    dir.create(basindir)
+    pdf(file = paste0(basindir,"/","WXSummary.pdf"),width = 6,height = 4)
     WXData=FillMissWX(gCentroid(basin)$y,gCentroid(basin)$x,date_min = "1979-01-01",date_max = "2022-01-01", StnRadius = stradius,method = "IDW",alfa = 2)
     dev.off()
     GRDC_mindate=min(WXData$date)
@@ -74,15 +100,65 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
     WXData$TMN=WXData$MinTemp
     WXData$TMN[is.na(WXData$TMN)]=-99
     WXData$DATE=WXData$date
-    build_swat_basic(dirname=basinname, iyr=min(year(WXData$DATE),na.rm=T),    ###***basin name!
+    build_swat_basic(dirname=basindir, iyr=min(year(WXData$DATE),na.rm=T),    ###***basin name!
                      nbyr=(max(year(WXData$DATE),na.rm=T)-min(year(WXData$DATE),na.rm=T)), 
                      wsarea=basin_area, elev=mean(WXData$prcpElevation,na.rm=T), 
                      declat=declat, declon=declon, hist_wx=WXData)
     build_wgn_file(metdata_df=WXData,declat=declat,declon=declon)
     runSWAT2012()
+    output_rch=readSWAT("rch",".")
+    output_plot=merge(output_rch[output_rch$RCH==3],flowgage$flowdata,by="mdate")
+    output_plot=merge(output_plot,WXData,by.x="mdate",by.y="date")
+    output_plot$Qpredmm=output_plot$FLOW_OUTcms/(basin_area*10^6)*3600*24*1000
+    output_plot$Qmm=output_plot$Qm3ps/(basin_area*10^6)*3600*24/10
+    
+    maxRange <- 1.1*(max(output_plot$P,na.rm = T) + max(output_plot$Qpredmm,na.rm = T))
+    
+    p1<- ggplot() +
+      # Use geom_tile to create the inverted hyetograph. geom_tile has a bug that displays a warning message for height and width, you can ignore it.
+      geom_tile(data = output_plot, aes(x=date,y = -1*(P/2-maxRange), # y = the center point of each bar
+                height = P,width = 1),
+                fill = "black",
+                color = "black") +
+      # Plot your discharge data
+      geom_line(data=output_plot,aes(x=date, y = Qmm, colour ="Qmm"), size=1) +
+      geom_line(data=output_plot,aes(x=date, y = Qpredmm, colour= "Qpred"), size=1) +
+      scale_colour_manual("", 
+                          breaks = c("Qmm", "Qpred"),
+                          values = c("red", "blue")) +
+      # Create a second axis with sec_axis() and format the labels to display the original precipitation units.
+      scale_y_continuous(name = "Discharge (mm/day)",
+                         sec.axis = sec_axis(trans = ~-1*(.-maxRange),
+                                             name = "Precipitation (mm/day)"))+
+      scale_x_continuous(name = NULL,labels = NULL)+
+      ggtitle(flowgage$gagename)
+    
+    #ET and Excess
+#    p2 <- ggplot(TMWB, aes(x=date)) +
+#      geom_line(aes(y=Excess, colour="Excess"), size=1)+
+#      geom_line(aes(y=ET, colour="ET"), size=1) +
+#      scale_colour_manual("", 
+#                          breaks = c("ET", "Excess"),
+#                          values = c("red", "blue")) +
+#      scale_y_continuous(name = "Depth (mm/day)",) +
+#      scale_x_continuous(name = NULL,labels = NULL) 
+    #FOR AW
+#    p3 <- ggplot(TMWB, aes(x=date)) +
+#      geom_line(aes(y=AW,colour="AW"), size=1) +
+#      scale_colour_manual("", 
+#                          breaks = c("AW"),
+#                          values = c("black")) +
+#      scale_y_continuous(
+        # Features of the first axis
+#        name = "AW (mm)",
+#        
+#      )
+    
+#    p1 + p2 + p3+ plot_layout(ncol = 1, widths = c(2,2,1))
     
     
-        
+    
+    
   }
 }
 
@@ -263,3 +339,13 @@ dbWriteTable(con, "output_hru", output_hru,overwrite = TRUE)
 dbWriteTable(con, "output_rch", output_rch,overwrite = TRUE)
 dbWriteTable(con, "output_sub", output_sub,overwrite = TRUE)
 dbListTables(con)
+
+pathtofile="."
+cfilename=paste0(pathtofile,"/file.cio")
+SWATnbyr = read.fortran(textConnection(readLines(cfilename)[8]), "f20")[1,]
+SWATiyr = read.fortran(textConnection(readLines(cfilename)[9]), "f20")[1,]
+SWATidaf = read.fortran(textConnection(readLines(cfilename)[10]), "f20")[1,]
+SWATidal = read.fortran(textConnection(readLines(cfilename)[11]), "f20")[1,]
+startdate=as_date(paste0(SWATiyr,"-01-01")) + SWATidaf -1
+enddate=as_date(paste0(SWATiyr+SWATnbyr -1,"-01-01")) + SWATidal -1
+AllDays=data.frame(date=seq(startdate, by = "day", length.out = enddate-startdate+1))
