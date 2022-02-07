@@ -246,6 +246,7 @@ if(!is.null(args$swatscen) && substr(trimws(args$swatscen),1,5)=="calib"){
   calib_params[grep("Ksat",calib_params[,"parameter"]),c("min","max","current")]=c(.5,1.5,1)
   calib_params[grep("SMFMN",calib_params[,"parameter"]),c("min","max","current")]=c(0,5,2.5)
   calib_params[grep("SMFMX",calib_params[,"parameter"]),c("min","max","current")]=c(0,5,2.5)
+  calib_params[grep("TIMP",calib_params[,"parameter"]),c("min","max","current")]=c(.01,1,.5)
   calib_params[grep("CN2",calib_params[,"parameter"]),c("min","max","current")]=c(35,95,70)
   calib_params[grep("Depth",calib_params[,"parameter"]),c("min","max","current")]=c(.5,2,1)
   calib_params[grep("Ave",calib_params[,"parameter"]),c("min","max","current")]=c(.5,2,1)
