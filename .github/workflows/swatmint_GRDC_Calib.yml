@@ -1,4 +1,4 @@
-name: sandbox 
+name: GRDC_Calib 
 
 on:
   push:
