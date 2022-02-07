@@ -60,8 +60,8 @@ get_grdc_gage=function(filename=filename){
   flowgage$flowdata$site_no=GRDC_No
   flowgage$flowdata$date=flowgage$flowdata$dates
   flowgage$flowdata$mdate=flowgage$flowdata$dates
-  flowgage$flowdata$flow=flowgage$flowdata$Value*3600*24   #flow is in cubic meters per day
-  flowgage$flowdata$Qm3ps=flowgage$flowdata$Value*3600*24   #flow is in cubic meters per day
+  flowgage$flowdata$flow=flowgage$flowdata$Value   #flow is in cubic meters per second
+  flowgage$flowdata$Qm3ps=flowgage$flowdata$Value   #flow is in cubic meters per second
   return(flowgage)
 }
 
