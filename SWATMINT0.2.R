@@ -46,8 +46,8 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
   currentdir=getwd()
   unzip("../data.zip")
   stationbasins_shp=readOGR("stationbasins.geojson")
-#  for(filename in list.files(pattern = "_Q_Day")){
-  for(filename in list.files(pattern = "_Q_Day")[2]){
+  for(filename in list.files(pattern = "_Q_Day")){
+#  for(filename in list.files(pattern = "_Q_Day")[2]){
       #    filename=list.files(pattern = "_Q_Day")[2]
     print(filename)    
     setwd(currentdir)
