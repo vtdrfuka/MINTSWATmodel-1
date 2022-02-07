@@ -306,4 +306,3 @@ SWATidal = read.fortran(textConnection(readLines(cfilename)[11]), "f20")[1,]
 startdate=as_date(paste0(SWATiyr,"-01-01")) + SWATidaf -1
 enddate=as_date(paste0(SWATiyr+SWATnbyr -1,"-01-01")) + SWATidal -1
 AllDays=data.frame(date=seq(startdate, by = "day", length.out = enddate-startdate+1))
-
