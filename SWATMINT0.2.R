@@ -26,15 +26,15 @@ parser$add_argument("-d","--swatiniturl", metavar="url to ArcSWAT init or GRDC f
 
 # Examples:
 # geojson example 
-exampleurl="-d https://data.mint.isi.edu/files/files/geojson/guder.json"
-# GRDC example 
-#exampleurl="-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip"
+exampleargs=c("-d https://data.mint.isi.edu/files/files/geojson/guder.json")
+# GRDC Calibration example 
+#exampleargs=c("-s calib01","-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip")
 # ArcSWAT example 
-#exampleurl="-d https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip"
+#exampleargs=c("-d https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip")
 #
 args <- parser$parse_args()
 if(is.null(args$swatiniturl)){
-   args <- parser$parse_args(c(exampleurl,"-s calib01"))
+   args <- parser$parse_args(c(exampleargs))
 }
 print(paste0("This run's args: ",args))
 dlfilename=basename(args$swatiniturl)
@@ -155,7 +155,7 @@ if(swatrun=="GRDC"){
 
 if(dlfiletype=="json"){
   basinname=strsplit(basename(args$swatiniturl),split = "\\.")[[1]][1]
-  basinoutdir=paste0(outbasedir,"/",basinid);dir.create(basinoutdir)
+  basinoutdir=paste0(outbasedir,"/",basinname);dir.create(basinoutdir)
   basin=readOGR("data.json")
   declat=gCentroid(basin)$y
   declon=gCentroid(basin)$x
@@ -326,3 +326,4 @@ SWATidal = read.fortran(textConnection(readLines(cfilename)[11]), "f20")[1,]
 startdate=as_date(paste0(SWATiyr,"-01-01")) + SWATidaf -1
 enddate=as_date(paste0(SWATiyr+SWATnbyr -1,"-01-01")) + SWATidal -1
 AllDays=data.frame(date=seq(startdate, by = "day", length.out = enddate-startdate+1))
+
