@@ -5,7 +5,7 @@ source("https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/build_wgn_
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/SWATmodel/R/readSWAT.R?root=ecohydrology")
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/EcoHydRology/R/setup_swatcal.R?root=ecohydrology")
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/EcoHydRology/R/swat_objective_function_rch.R?root=ecohydrology")
-source("https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/get_grdc_gage.R")
+source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/get_grdc_gage.R")
 
 setwd("~")
 basedir=getwd()
@@ -19,8 +19,8 @@ Sys.setenv(R_USER_CACHE_DIR=inbasedir)
 parser <- ArgumentParser()
 parser$add_argument("-p","--swatparam", action="append", metavar="param:val[:regex_file]",
                     help = "Add in SWAT parameters that need to be modified")
-parser$add_argument("-s","--swatscen", metavar="calib1",
-                    help = "Scenario folder name")
+parser$add_argument("-s","--swatscen", metavar="calib01",
+                    help = "Scenario folder name, 'calib' for calibration, 'scen' for scenario")
 parser$add_argument("-d","--swatiniturl", metavar="url to ArcSWAT init or GRDC format dataset",
                     help = "Scenario folder name")
 
@@ -46,8 +46,9 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
   currentdir=getwd()
   unzip("../data.zip")
   stationbasins_shp=readOGR("stationbasins.geojson")
-  for(filename in list.files(pattern = "_Q_Day")){
-#    filename=list.files(pattern = "_Q_Day")[2]
+#  for(filename in list.files(pattern = "_Q_Day")){
+  for(filename in list.files(pattern = "_Q_Day")[2]){
+      #    filename=list.files(pattern = "_Q_Day")[2]
     print(filename)    
     setwd(currentdir)
     flowgage=get_grdc_gage(filename)
@@ -74,7 +75,7 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
     stradius=20;minstns=30
     station_data=ghcnd_stations()
     while(stradius<2000){
-      print(stradius)
+      print(paste0("Looking for WX Stations within: ",stradius,"km"))
       junk=meteo_distance(
         station_data=station_data,
         lat=wxlat, long=wxlon,
@@ -138,11 +139,14 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
   }
 }
 
-if(substr(trimws(args$swatscen),1,5)=="calib")){
-  test2 = subset(output_rch, output_rch$RCH == 3)
+
+
+if(substr(trimws(args$swatscen),1,5)=="calib"){
+  test2=subset(output_rch, output_rch$RCH == 3)
   test2=merge(test2,flowgage$flowdata,by="mdate")
   plot(test2$mdate,test2$FLOW_OUTcms,type="l")
-  
+  lines(test2$mdate,test2$flow,type="l",col="blue")
+  plot(test2$FLOW_OUTcms,test2$flow)
   save(readSWAT,file="readSWAT.R")
   
   change_params=""
