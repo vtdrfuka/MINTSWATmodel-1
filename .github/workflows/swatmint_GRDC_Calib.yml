@@ -22,7 +22,7 @@ jobs:
           docker build . --tag $IMAGE_NAME
       - name: Test R script
         run: |
-          docker run -t ${IMAGE_NAME} Rscript SWATMINT0.2.R -d https://data.mint.isi.edu/files/files/geojson/guder.json
+          docker run -t ${IMAGE_NAME} Rscript SWATMINT0.2.R -s calib01 -d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip
           
       - name: Login to DockerHub
         uses: docker/login-action@v1
