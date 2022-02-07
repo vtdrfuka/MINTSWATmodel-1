@@ -199,8 +199,7 @@ if(dlfiletype=="json"){
   build_wgn_file(metdata_df=WXData,declat=declat,declon=declon)
   runSWAT2012()
   output_rch=readSWAT("rch",".")
-  output_plot=merge(output_rch[output_rch$RCH==3],flowgage$flowdata,by="mdate")
-  output_plot=merge(output_plot,WXData,by.x="mdate",by.y="date")
+  output_plot=merge(output_rch,WXData,by.x="mdate",by.y="date")
   output_plot$Qpredmm=output_plot$FLOW_OUTcms/(basin_area*10^6)*3600*24*1000
   output_plot$Qmm=output_plot$Qm3ps/(basin_area*10^6)*3600*24/10
   
@@ -213,7 +212,6 @@ if(dlfiletype=="json"){
               fill = "black",
               color = "black") +
     # Plot your discharge data
-    geom_line(data=output_plot,aes(x=date, y = Qmm, colour ="Qmm"), size=1) +
     geom_line(data=output_plot,aes(x=date, y = Qpredmm, colour= "Qpred"), size=1) +
     scale_colour_manual("",breaks = c("Qmm", "Qpred"),values = c("red", "blue")) +
     # Create a second axis with sec_axis() and format the labels to display the original precipitation units.
@@ -230,7 +228,7 @@ if(dlfiletype=="json"){
   
 }
 
-if(substr(trimws(args$swatscen),1,5)=="calib"){
+if(!is.null(args$swatscen) && substr(trimws(args$swatscen),1,5)=="calib"){
   test2=subset(output_rch, output_rch$RCH == 3)
   test2=merge(test2,flowgage$flowdata,by="mdate")
   plot(test2$mdate,test2$FLOW_OUTcms,type="l")
@@ -326,4 +324,3 @@ SWATidal = read.fortran(textConnection(readLines(cfilename)[11]), "f20")[1,]
 startdate=as_date(paste0(SWATiyr,"-01-01")) + SWATidaf -1
 enddate=as_date(paste0(SWATiyr+SWATnbyr -1,"-01-01")) + SWATidal -1
 AllDays=data.frame(date=seq(startdate, by = "day", length.out = enddate-startdate+1))
-
