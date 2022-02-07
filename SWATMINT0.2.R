@@ -219,7 +219,7 @@ if(dlfiletype=="json"){
                        sec.axis = sec_axis(trans = ~-1*(.-maxRange),
                                            name = "Precipitation (mm/day)"))+
     scale_x_continuous(name = NULL,labels = NULL)+
-    ggtitle(toupper(basin))
+    ggtitle(toupper(basinname))
   pdf(file = paste0(basinoutdir,"/","HydroSummary.pdf"),width = 6,height = 4)
   p1
   dev.off()
