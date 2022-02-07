@@ -28,7 +28,7 @@ parser$add_argument("-d","--swatiniturl", metavar="url to ArcSWAT init or GRDC f
 # geojson example 
 exampleargs=c("-d https://data.mint.isi.edu/files/files/geojson/guder.json")
 # GRDC Calibration example 
-exampleargs=c("-s calib01","-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip")
+exampleargs=c("-s calib01","-p GW_DELAY:12","-p deiter:3","-p rch:3","-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip")
 # ArcSWAT example 
 #exampleargs=c("-d https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip")
 #
@@ -39,6 +39,20 @@ if(is.null(args$swatiniturl)){
 print(paste0("This run's args: ",args))
 dlfilename=basename(args$swatiniturl)
 dlurl=trimws(args$swatiniturl)
+
+paramloc=grep("deiter",args$swatparam)
+if(length(paramloc)>0){
+  deiter=as.numeric(strsplit(args$swatparam[paramloc],split = ":")[[1]][2])
+}else{
+  deiter=200
+}
+paramloc=grep("rch",args$swatparam)
+if(length(paramloc)>0){
+  rch=as.numeric(strsplit(args$swatparam[paramloc],split = ":")[[1]][2])
+}else{
+  rch=3
+}
+
 # *** download
 dlfiletype=file_ext(dlfilename)
 if(dlfiletype=="json"){
@@ -124,7 +138,7 @@ if(swatrun=="GRDC"){
     build_wgn_file(metdata_df=WXData,declat=declat,declon=declon)
     runSWAT2012()
     output_rch=readSWAT("rch",".")
-    output_plot=merge(output_rch[output_rch$RCH==3],flowgage$flowdata,by="mdate")
+    output_plot=merge(output_rch[output_rch$RCH==rch],flowgage$flowdata,by="mdate")
     output_plot=merge(output_plot,WXData,by.x="mdate",by.y="date")
     output_plot$Qpredmm=output_plot$FLOW_OUTcms/(basin_area*10^6)*3600*24*1000
     output_plot$Qmm=output_plot$Qm3ps/(basin_area*10^6)*3600*24/10
@@ -229,7 +243,8 @@ if(dlfiletype=="json"){
 }
 
 if(!is.null(args$swatscen) && substr(trimws(args$swatscen),1,5)=="calib"){
-  test2=subset(output_rch, output_rch$RCH == 3)
+  
+  test2=subset(output_rch, output_rch$RCH == rch)
   test2=merge(test2,flowgage$flowdata,by="mdate")
   plot(test2$mdate,test2$FLOW_OUTcms,type="l")
   lines(test2$mdate,test2$flow,type="l",col="blue")
@@ -255,11 +270,9 @@ if(!is.null(args$swatscen) && substr(trimws(args$swatscen),1,5)=="calib"){
   calib_params[grep("GW_REVAP",calib_params[,"parameter"]),c("min","max","current")]=c(0,.3,.02)
   
   setup_swatcal(calib_params)
-  rch=3
-  
+
   # Test calibration
   x=calib_params$current
-  deiter=5
   swat_objective_function_rch(x,calib_range,calib_params,flowgage,rch,save_results=F)
   outDEoptim<-DEoptim(swat_objective_function_rch,calib_params$min,calib_params$max,
                       DEoptim.control(strategy = 6,NP = 16,itermax=deiter,parallelType = 1,
@@ -302,11 +315,11 @@ if(!is.null(args$swatscen)){
   alter_files(calib_params)
 }
 
-runSWAT2012(rch = 1)
+runSWAT2012(rch = rch)
 output_hru=readSWAT("hru",".")
 output_sub=readSWAT("sub",".")
 output_rch=readSWAT("rch",".")
-test2 = subset(output_rch, output_rch$RCH == 3)
+test2 = subset(output_rch, output_rch$RCH == rch)
 plot(test2$mdate,test2$FLOW_OUTcms,type="l")
 
 setwd("../../../")
@@ -326,4 +339,3 @@ SWATidal = read.fortran(textConnection(readLines(cfilename)[11]), "f20")[1,]
 startdate=as_date(paste0(SWATiyr,"-01-01")) + SWATidaf -1
 enddate=as_date(paste0(SWATiyr+SWATnbyr -1,"-01-01")) + SWATidal -1
 AllDays=data.frame(date=seq(startdate, by = "day", length.out = enddate-startdate+1))
-
