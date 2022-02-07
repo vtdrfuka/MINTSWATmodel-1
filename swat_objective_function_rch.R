@@ -19,7 +19,10 @@ swat_objective_function_rch<-function (x, calib_range, calib_params, flowgage, r
   test3 = merge(flowgage$flowdata, test2, all = F)
   NS = NSeff(test3$Qm3ps, test3$FLOW_OUTcms)
   print(NS)
-  if(save_results){file.copy(list.files(),"../")}
+  if(save_results){
+    calibdir=paste0("../calib",format(Sys.time(),format="%Y%m%d%H%M"))
+    file.copy(list.files(),calibdir)
+  }
   file.remove(list.files())
   setwd("../")
   file.remove(tmpdir)
