@@ -1,4 +1,4 @@
-name: sandbox 
+name: GeoJSON_Basic 
 
 on:
   push:
