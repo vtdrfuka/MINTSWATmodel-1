@@ -28,7 +28,7 @@ parser$add_argument("-d","--swatiniturl", metavar="url to ArcSWAT init or GRDC f
 # geojson example 
 exampleargs=c("-d https://data.mint.isi.edu/files/files/geojson/guder.json")
 # GRDC Calibration example 
-#exampleargs=c("-s calib01","-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip")
+exampleargs=c("-s calib01","-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip")
 # ArcSWAT example 
 #exampleargs=c("-d https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip")
 #
@@ -259,9 +259,10 @@ if(!is.null(args$swatscen) && substr(trimws(args$swatscen),1,5)=="calib"){
   
   # Test calibration
   x=calib_params$current
+  deiter=5
   swat_objective_function_rch(x,calib_range,calib_params,flowgage,rch,save_results=F)
   outDEoptim<-DEoptim(swat_objective_function_rch,calib_params$min,calib_params$max,
-                      DEoptim.control(strategy = 6,NP = 16,itermax=5,parallelType = 1,
+                      DEoptim.control(strategy = 6,NP = 16,itermax=deiter,parallelType = 1,
                                       packages = c("SWATmodel")),calib_range,calib_params,flowgage,rch)
   x=outDEoptim$optim$bestmem  # need to save this, along with an ArcSWAT like directory structure for the basin  
 }
@@ -325,3 +326,4 @@ SWATidal = read.fortran(textConnection(readLines(cfilename)[11]), "f20")[1,]
 startdate=as_date(paste0(SWATiyr,"-01-01")) + SWATidaf -1
 enddate=as_date(paste0(SWATiyr+SWATnbyr -1,"-01-01")) + SWATidal -1
 AllDays=data.frame(date=seq(startdate, by = "day", length.out = enddate-startdate+1))
+
