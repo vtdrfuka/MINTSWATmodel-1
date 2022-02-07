@@ -28,9 +28,9 @@ parser$add_argument("-d","--swatiniturl", metavar="url to ArcSWAT init or GRDC f
 # geojson example 
 exampleurl="-d https://data.mint.isi.edu/files/files/geojson/guder.json"
 # GRDC example 
-# exampleurl="-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip"
+#exampleurl="-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip"
 # ArcSWAT example 
-exampleurl="-d https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip"
+#exampleurl="-d https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip"
 #
 args <- parser$parse_args()
 if(is.null(args$swatiniturl)){
@@ -101,9 +101,8 @@ if(swatrun=="GRDC"){
       if(length(unique(junk$id))>minstns){break()}
       stradius=stradius*1.2
     }
-    basindir=paste0(outbasedir,"/",basinid)
-    dir.create(basindir)
-    pdf(file = paste0(basindir,"/","WXSummary.pdf"),width = 6,height = 4)
+    basinoutdir=paste0(outbasedir,"/",basinid);dir.create(basinoutdir)
+    pdf(file = paste0(basinoutdir,"/","WXSummary.pdf"),width = 6,height = 4)
     WXData=FillMissWX(gCentroid(basin)$y,gCentroid(basin)$x,date_min = "1979-01-01",date_max = "2022-01-01", StnRadius = stradius,method = "IDW",alfa = 2)
     dev.off()
     GRDC_mindate=min(WXData$date)
@@ -148,7 +147,7 @@ if(swatrun=="GRDC"){
                                              name = "Precipitation (mm/day)"))+
       scale_x_continuous(name = NULL,labels = NULL)+
       ggtitle(flowgage$gagename)
-    pdf(file = paste0(basindir,"/","HydroSummary.pdf"),width = 6,height = 4)
+    pdf(file = paste0(basinoutdir,"/","HydroSummary.pdf"),width = 6,height = 4)
     p1
     dev.off()
   }
@@ -156,8 +155,8 @@ if(swatrun=="GRDC"){
 
 if(dlfiletype=="json"){
   basinname=strsplit(basename(args$swatiniturl),split = "\\.")[[1]][1]
-  download.file(args$swatiniturl,dlfilename)
-  basin=readOGR(dlfilename)
+  basinoutdir=paste0(outbasedir,"/",basinid);dir.create(basinoutdir)
+  basin=readOGR("data.json")
   declat=gCentroid(basin)$y
   declon=gCentroid(basin)$x
   proj4_utm = paste0("+proj=utm +zone=", trunc((180+declon)/6+1), " +datum=WGS84 +units=m +no_defs")
@@ -178,7 +177,7 @@ if(dlfiletype=="json"){
     if(length(unique(junk$id))>minstns){break()}
     stradius=stradius*1.2
   }
-  pdf(file = "WXSummary.pdf",width = 6,height = 4)
+  pdf(file = paste0(basinoutdir,"/WXSummary.pdf"),width = 6,height = 4)
   WXData=FillMissWX(gCentroid(basin)$y,gCentroid(basin)$x,date_min = "1979-01-01",date_max = "2022-01-01", StnRadius = stradius,method = "IDW",alfa = 2)
   dev.off()
   GRDC_mindate=min(WXData$date)
@@ -199,11 +198,37 @@ if(dlfiletype=="json"){
                    declat=declat, declon=declon, hist_wx=WXData)
   build_wgn_file(metdata_df=WXData,declat=declat,declon=declon)
   runSWAT2012()
+  output_rch=readSWAT("rch",".")
+  output_plot=merge(output_rch[output_rch$RCH==3],flowgage$flowdata,by="mdate")
+  output_plot=merge(output_plot,WXData,by.x="mdate",by.y="date")
+  output_plot$Qpredmm=output_plot$FLOW_OUTcms/(basin_area*10^6)*3600*24*1000
+  output_plot$Qmm=output_plot$Qm3ps/(basin_area*10^6)*3600*24/10
+  
+  maxRange <- 1.1*(max(output_plot$P,na.rm = T) + max(output_plot$Qpredmm,na.rm = T))
+  
+  p1<- ggplot() +
+    # Use geom_tile to create the inverted hyetograph. geom_tile has a bug that displays a warning message for height and width, you can ignore it.
+    geom_tile(data = output_plot, aes(x=date,y = -1*(P/2-maxRange), # y = the center point of each bar
+                                      height = P,width = 1),
+              fill = "black",
+              color = "black") +
+    # Plot your discharge data
+    geom_line(data=output_plot,aes(x=date, y = Qmm, colour ="Qmm"), size=1) +
+    geom_line(data=output_plot,aes(x=date, y = Qpredmm, colour= "Qpred"), size=1) +
+    scale_colour_manual("",breaks = c("Qmm", "Qpred"),values = c("red", "blue")) +
+    # Create a second axis with sec_axis() and format the labels to display the original precipitation units.
+    scale_y_continuous(name = "Discharge (mm/day)",
+                       sec.axis = sec_axis(trans = ~-1*(.-maxRange),
+                                           name = "Precipitation (mm/day)"))+
+    scale_x_continuous(name = NULL,labels = NULL)+
+    ggtitle(flowgage$gagename)
+  pdf(file = paste0(basinoutdir,"/","HydroSummary.pdf"),width = 6,height = 4)
+  p1
+  dev.off()
   
   # first weather generator function
   
 }
-
 
 if(substr(trimws(args$swatscen),1,5)=="calib"){
   test2=subset(output_rch, output_rch$RCH == 3)
@@ -240,11 +265,6 @@ if(substr(trimws(args$swatscen),1,5)=="calib"){
                       DEoptim.control(strategy = 6,NP = 16,itermax=5,parallelType = 1,
                                       packages = c("SWATmodel")),calib_range,calib_params,flowgage,rch)
   x=outDEoptim$optim$bestmem  # need to save this, along with an ArcSWAT like directory structure for the basin  
-  # mkdir -p Scenarios/Default/TxtInOut
-  
-  #  dev.copy(png, file = "geyserplot.png")
-  #  dev.off()
-  #  dev.off()
 }
 
 print(args)
