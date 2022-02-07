@@ -46,8 +46,8 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
   currentdir=getwd()
   unzip("../data.zip")
   stationbasins_shp=readOGR("stationbasins.geojson")
-#  for(filename in list.files(pattern = "_Q_Day")){
-  for(filename in list.files(pattern = "_Q_Day")[2]){
+  for(filename in list.files(pattern = "_Q_Day")){
+#  for(filename in list.files(pattern = "_Q_Day")[2]){
       #    filename=list.files(pattern = "_Q_Day")[2]
     print(filename)    
     setwd(currentdir)
@@ -139,8 +139,6 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
   }
 }
 
-
-
 if(substr(trimws(args$swatscen),1,5)=="calib"){
   test2=subset(output_rch, output_rch$RCH == 3)
   test2=merge(test2,flowgage$flowdata,by="mdate")
@@ -173,7 +171,7 @@ if(substr(trimws(args$swatscen),1,5)=="calib"){
   x=calib_params$current
   swat_objective_function_rch(x,calib_range,calib_params,flowgage,rch,save_results=F)
   outDEoptim<-DEoptim(swat_objective_function_rch,calib_params$min,calib_params$max,
-                      DEoptim.control(strategy = 6,NP = 16,itermax=200,parallelType = 1,
+                      DEoptim.control(strategy = 6,NP = 16,itermax=5,parallelType = 1,
                                       packages = c("SWATmodel")),calib_range,calib_params,flowgage,rch)
   x=outDEoptim$optim$bestmem  # need to save this, along with an ArcSWAT like directory structure for the basin  
   # mkdir -p Scenarios/Default/TxtInOut
@@ -182,10 +180,6 @@ if(substr(trimws(args$swatscen),1,5)=="calib"){
   #  dev.off()
   #  dev.off()
 }
-
-
-
-
 
 args <- parser$parse_args(c("-d https://data.mint.isi.edu/files/files/geojson/guder.json"))
 #args <- parser$parse_args()
