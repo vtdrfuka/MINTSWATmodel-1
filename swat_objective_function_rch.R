@@ -21,6 +21,7 @@ swat_objective_function_rch<-function (x, calib_range, calib_params, flowgage, r
   print(NS)
   if(save_results){
     calibdir=paste0("../calib",format(Sys.time(),format="%Y%m%d%H%M"))
+    dir.create(calibdir)
     file.copy(list.files(),calibdir)
   }
   file.remove(list.files())
