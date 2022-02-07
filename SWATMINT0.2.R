@@ -19,7 +19,7 @@ Sys.setenv(R_USER_CACHE_DIR=inbasedir)
 parser <- ArgumentParser()
 parser$add_argument("-p","--swatparam", action="append", metavar="param:val[:regex_file]",
                     help = "Add in SWAT parameters that need to be modified")
-parser$add_argument("-s","--swatscen", metavar="scen1",
+parser$add_argument("-s","--swatscen", metavar="calib1",
                     help = "Scenario folder name")
 parser$add_argument("-d","--swatiniturl", metavar="url to ArcSWAT init or GRDC format dataset",
                     help = "Scenario folder name")
@@ -32,7 +32,7 @@ exampleurl="-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d
 # ArcSWAT example 
 # exampleurl="-d https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip"
 #
-args <- parser$parse_args(c(exampleurl))
+args <- parser$parse_args(c(exampleurl,"-s calib01"))
 dlfilename=basename(args$swatiniturl)
 download.file(trimws(args$swatiniturl),"data.zip")
 if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
@@ -43,11 +43,13 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
   print("GRDC")
   dir.create("GRDCstns")
   setwd("GRDCstns")
+  currentdir=getwd()
   unzip("../data.zip")
   stationbasins_shp=readOGR("stationbasins.geojson")
   for(filename in list.files(pattern = "_Q_Day")){
 #    filename=list.files(pattern = "_Q_Day")[2]
     print(filename)    
+    setwd(currentdir)
     flowgage=get_grdc_gage(filename)
     basinid=strsplit(filename,"_")[[1]][1]
     if(is.character(flowgage)){next()}
@@ -123,77 +125,24 @@ if(grepl("Q_Day",unzip("data.zip", list=T)[1])){
       # Plot your discharge data
       geom_line(data=output_plot,aes(x=date, y = Qmm, colour ="Qmm"), size=1) +
       geom_line(data=output_plot,aes(x=date, y = Qpredmm, colour= "Qpred"), size=1) +
-      scale_colour_manual("", 
-                          breaks = c("Qmm", "Qpred"),
-                          values = c("red", "blue")) +
+      scale_colour_manual("",breaks = c("Qmm", "Qpred"),values = c("red", "blue")) +
       # Create a second axis with sec_axis() and format the labels to display the original precipitation units.
       scale_y_continuous(name = "Discharge (mm/day)",
                          sec.axis = sec_axis(trans = ~-1*(.-maxRange),
                                              name = "Precipitation (mm/day)"))+
       scale_x_continuous(name = NULL,labels = NULL)+
       ggtitle(flowgage$gagename)
-    
-    #ET and Excess
-#    p2 <- ggplot(TMWB, aes(x=date)) +
-#      geom_line(aes(y=Excess, colour="Excess"), size=1)+
-#      geom_line(aes(y=ET, colour="ET"), size=1) +
-#      scale_colour_manual("", 
-#                          breaks = c("ET", "Excess"),
-#                          values = c("red", "blue")) +
-#      scale_y_continuous(name = "Depth (mm/day)",) +
-#      scale_x_continuous(name = NULL,labels = NULL) 
-    #FOR AW
-#    p3 <- ggplot(TMWB, aes(x=date)) +
-#      geom_line(aes(y=AW,colour="AW"), size=1) +
-#      scale_colour_manual("", 
-#                          breaks = c("AW"),
-#                          values = c("black")) +
-#      scale_y_continuous(
-        # Features of the first axis
-#        name = "AW (mm)",
-#        
-#      )
-    
-#    p1 + p2 + p3+ plot_layout(ncol = 1, widths = c(2,2,1))
-    
-    
-    
-    
+    pdf(file = paste0(basindir,"/","HydroSummary.pdf"),width = 6,height = 4)
+    p1
+    dev.off()
   }
 }
 
-for(filename in list.files(pattern = "_Q_Day")){
-  #  filename=list.files(pattern = "_Q_Day")[2]
-  #  par(mfrow=c(4,2))
-  #setwd(basedir)
-  flowgage=get_grdc_gage(filename)
-  if(is.character(flowgage)){next()}
-  GRDC_mindate=min(flowgage$flowdata$mdate)
-  GRDC_maxdate=max(flowgage$flowdata$mdate)
-  # Depends on: rnoaa, lubridate::month,ggplot2
-  WXData=FillMissWX(declat = flowgage$declat,declon = flowgage$declon,StnRadius = 500,date_min=GRDC_mindate,date_max=GRDC_maxdate,method = "IDW",minstns = 3)
-  AllDays=data.frame(date=seq(GRDC_mindate, by = "day", length.out = GRDC_maxdate-GRDC_mindate))
-  WXData=merge(AllDays,WXData,all=T)
-  
-  WXData$PRECIP=WXData$P
-  WXData$PRECIP[is.na(WXData$PRECIP)]=-99
-  WXData$TMX=WXData$MaxTemp
-  WXData$TMX[is.na(WXData$TMX)]=-99
-  WXData$TMN=WXData$MinTemp
-  WXData$TMN[is.na(WXData$TMN)]=-99
-  WXData$DATE=WXData$date
-  build_swat_basic(dirname= flowgage$id, iyr=min(year(WXData$DATE),na.rm=T), nbyr=(max(year(WXData$DATE),na.rm=T)-min(year(WXData$DATE),na.rm=T) +1), wsarea=flowgage$area, elev=flowgage$elev, declat=flowgage$declat, declon=flowgage$declon, hist_wx=WXData)
-  build_wgn_file()
-  runSWAT2012()
-  output_hru=readSWAT("hru",".")
-  output_sub=readSWAT("sub",".")
-  output_rch=readSWAT("rch",".")
+if(substr(trimws(args$swatscen),1,5)=="calib")){
   test2 = subset(output_rch, output_rch$RCH == 3)
   test2=merge(test2,flowgage$flowdata,by="mdate")
   plot(test2$mdate,test2$FLOW_OUTcms,type="l")
   
-  
-}  
   save(readSWAT,file="readSWAT.R")
   
   change_params=""
