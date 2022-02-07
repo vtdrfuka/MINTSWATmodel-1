@@ -268,7 +268,7 @@ if(substr(trimws(args$swatscen),1,5)=="calib"){
 }
 
 print(args)
-stop()
+quit()
 
 # https://www.nature.com/articles/s41597-019-0155-x Reference dataset
 #CN250url="https://figshare.com/ndownloader/files/15377363"
