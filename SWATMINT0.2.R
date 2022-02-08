@@ -9,6 +9,7 @@ source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/get_grd
 source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/MINTSWATcalib.R")
 source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/swat_objective_function_rch.R")
 setwd("~")
+print(getwd())
 basedir=getwd()
 outbasedir=paste0(basedir,"/MINTSWATmodel_output")
 inbasedir=paste0(basedir,"/MINTSWATmodel_input")
