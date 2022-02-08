@@ -33,7 +33,7 @@ swat_objective_function_rch<-function (x, calib_range, calib_params, flowgage, r
        difflocs=as.numeric(strsplit(paste0(as.data.frame(strsplit(ses(junk1,junk2),split = "c"))[2,],collapse = ","),split=",")[[1]])
       if(length(difflocs)>0){
         write(diffname,"calibdiffs.txt",append=TRUE)
-        write(paste0(diffname,":",junk2[difflocs]," < ",junk1[difflocs]),"calibdiffs.txt",append=TRUE)
+        write(paste0(diffname,":",junk1[difflocs]," < ",junk2[difflocs]),"calibdiffs.txt",append=TRUE)
       }
     }
   }
