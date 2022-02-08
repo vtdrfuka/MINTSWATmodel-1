@@ -1,12 +1,13 @@
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(SWATmodel,RSQLite,argparse,stringi,stringr,rgdal,ggplot2,rgeos,rnoaa,moments,sf,readr,tools)
+pacman::p_load(SWATmodel,RSQLite,argparse,stringi,stringr,rgdal,ggplot2,rgeos,rnoaa,moments,sf,readr,tools,diffr)
 source("https://raw.githubusercontent.com/Rojakaveh/FillMissWX/main/FillMissWX.R")
 source("https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/build_wgn_file.R")
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/SWATmodel/R/readSWAT.R?root=ecohydrology")
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/EcoHydRology/R/setup_swatcal.R?root=ecohydrology")
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/EcoHydRology/R/swat_objective_function_rch.R?root=ecohydrology")
 source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/get_grdc_gage.R")
-
+source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/MINTSWATcalib.R")
+source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/swat_objective_function_rch.R")
 setwd("~")
 basedir=getwd()
 outbasedir=paste0(basedir,"/MINTSWATmodel_output")
@@ -136,15 +137,18 @@ if(swatrun=="GRDC"){
                      wsarea=basin_area, elev=mean(WXData$prcpElevation,na.rm=T), 
                      declat=declat, declon=declon, hist_wx=WXData)
     build_wgn_file(metdata_df=WXData,declat=declat,declon=declon)
+    if(!is.null(args$swatscen) && 
+       substr(trimws(args$swatscen),1,5)=="calib"){
+      MINTSWATcalib()
+    }
+
     runSWAT2012()
     output_rch=readSWAT("rch",".")
     output_plot=merge(output_rch[output_rch$RCH==rch],flowgage$flowdata,by="mdate")
     output_plot=merge(output_plot,WXData,by.x="mdate",by.y="date")
     output_plot$Qpredmm=output_plot$FLOW_OUTcms/(basin_area*10^6)*3600*24*1000
-    output_plot$Qmm=output_plot$Qm3ps/(basin_area*10^6)*3600*24/10
-    
+    output_plot$Qmm=output_plot$Qm3ps/(basin_area*10^6)*3600*24*1000
     maxRange <- 1.1*(max(output_plot$P,na.rm = T) + max(output_plot$Qpredmm,na.rm = T))
-    
     p1<- ggplot() +
       # Use geom_tile to create the inverted hyetograph. geom_tile has a bug that displays a warning message for height and width, you can ignore it.
       geom_tile(data = output_plot, aes(x=date,y = -1*(P/2-maxRange), # y = the center point of each bar
@@ -242,50 +246,13 @@ if(dlfiletype=="json"){
   
 }
 
-if(!is.null(args$swatscen) && substr(trimws(args$swatscen),1,5)=="calib"){
-  
-  test2=subset(output_rch, output_rch$RCH == rch)
-  test2=merge(test2,flowgage$flowdata,by="mdate")
-  plot(test2$mdate,test2$FLOW_OUTcms,type="l")
-  lines(test2$mdate,test2$flow,type="l",col="blue")
-  plot(test2$FLOW_OUTcms,test2$flow)
-  save(readSWAT,file="readSWAT.R")
-  
-  change_params=""
-  rm(change_params)
-  load(paste(path.package("EcoHydRology"), "data/change_params.rda", sep = "/"))
-  calib_range=c("1999-12-31","2021-12-31")
-  params_select=c(1,2,3,4,5,6,7,8,9,10,11,14,19,21,23,24,32,33)
-  calib_params=change_params[params_select,]
-  
-  calib_params[grep("Ksat",calib_params[,"parameter"]),c("min","max","current")]=c(.5,1.5,1)
-  calib_params[grep("SMFMN",calib_params[,"parameter"]),c("min","max","current")]=c(0,5,2.5)
-  calib_params[grep("SMFMX",calib_params[,"parameter"]),c("min","max","current")]=c(0,5,2.5)
-  calib_params[grep("TIMP",calib_params[,"parameter"]),c("min","max","current")]=c(.01,1,.5)
-  calib_params[grep("CN2",calib_params[,"parameter"]),c("min","max","current")]=c(35,95,70)
-  calib_params[grep("Depth",calib_params[,"parameter"]),c("min","max","current")]=c(.5,2,1)
-  calib_params[grep("Ave",calib_params[,"parameter"]),c("min","max","current")]=c(.5,2,1)
-  calib_params[grep("ALPHA_BF",calib_params[,"parameter"]),c("min","max","current")]=c(.01,1,.8)
-  calib_params[grep("GWQMN",calib_params[,"parameter"]),c("min","max","current")]=c(.1,600,1)
-  calib_params[grep("GW_REVAP",calib_params[,"parameter"]),c("min","max","current")]=c(0,.3,.02)
-  
-  setup_swatcal(calib_params)
 
-  # Test calibration
-  x=calib_params$current
-  swat_objective_function_rch(x,calib_range,calib_params,flowgage,rch,save_results=F)
-  outDEoptim<-DEoptim(swat_objective_function_rch,calib_params$min,calib_params$max,
-                      DEoptim.control(strategy = 6,NP = 16,itermax=deiter,parallelType = 1,
-                                      packages = c("SWATmodel")),calib_range,calib_params,flowgage,rch)
-  x=outDEoptim$optim$bestmem  # need to save this, along with an ArcSWAT like directory structure for the basin  
-}
-
-print(args)
 quit()
 
+# Good study to compare P/Q S against CN from:
 # https://www.nature.com/articles/s41597-019-0155-x Reference dataset
-#CN250url="https://figshare.com/ndownloader/files/15377363"
-#download.file(CN250url,"GCN250_ARCII.tif")
+# CN250url="https://figshare.com/ndownloader/files/15377363"
+# download.file(CN250url,"GCN250_ARCII.tif")
 
 setwd("./Scenarios/Default/TxtInOut/")
 load(paste(path.package("EcoHydRology"), "data/change_params.rda", sep = "/"))
@@ -314,28 +281,3 @@ if(!is.null(args$swatscen)){
   setup_swatcal(calib_params)
   alter_files(calib_params)
 }
-
-runSWAT2012(rch = rch)
-output_hru=readSWAT("hru",".")
-output_sub=readSWAT("sub",".")
-output_rch=readSWAT("rch",".")
-test2 = subset(output_rch, output_rch$RCH == rch)
-plot(test2$mdate,test2$FLOW_OUTcms,type="l")
-
-setwd("../../../")
-sqlitefile=paste0("./MINTSWATmodel_output/",args$swatscen,"MINTSWATtables.sqlite")
-con <- dbConnect(RSQLite::SQLite(), sqlitefile)
-dbWriteTable(con, "output_hru", output_hru,overwrite = TRUE)
-dbWriteTable(con, "output_rch", output_rch,overwrite = TRUE)
-dbWriteTable(con, "output_sub", output_sub,overwrite = TRUE)
-dbListTables(con)
-
-pathtofile="."
-cfilename=paste0(pathtofile,"/file.cio")
-SWATnbyr = read.fortran(textConnection(readLines(cfilename)[8]), "f20")[1,]
-SWATiyr = read.fortran(textConnection(readLines(cfilename)[9]), "f20")[1,]
-SWATidaf = read.fortran(textConnection(readLines(cfilename)[10]), "f20")[1,]
-SWATidal = read.fortran(textConnection(readLines(cfilename)[11]), "f20")[1,]
-startdate=as_date(paste0(SWATiyr,"-01-01")) + SWATidaf -1
-enddate=as_date(paste0(SWATiyr+SWATnbyr -1,"-01-01")) + SWATidal -1
-AllDays=data.frame(date=seq(startdate, by = "day", length.out = enddate-startdate+1))
