@@ -6,6 +6,8 @@ MINTSWATcalib=function(){
   calib_range=c("1999-12-31","2021-12-31")
   params_select=c(1,2,3,4,5,6,7,8,9,10,11,14,19,21,23,24,32,33)
   calib_params=change_params[params_select,]
+  print("You are calibrating the following parameters within the following files:\n")
+  print(calib_params[,1:2])
   
   calib_params[grep("Ksat",calib_params[,"parameter"]),c("min","max","current")]=c(.5,1.5,1)
   calib_params[grep("SMFMN",calib_params[,"parameter"]),c("min","max","current")]=c(0,5,2.5)
