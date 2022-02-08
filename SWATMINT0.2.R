@@ -139,6 +139,9 @@ if(swatrun=="GRDC"){
     build_wgn_file(metdata_df=WXData,declat=declat,declon=declon)
     if(!is.null(args$swatscen) && 
        substr(trimws(args$swatscen),1,5)=="calib"){
+       print("DEoptim Calibration has the can currently calibrate all 
+            of the following parameters within the following files:\n")
+      print(change_params[,1:2])
       MINTSWATcalib()
     }
 
