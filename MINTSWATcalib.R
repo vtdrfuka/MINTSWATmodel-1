@@ -3,6 +3,9 @@ MINTSWATcalib=function(){
   change_params=""
   rm(change_params)
   load(paste(path.package("EcoHydRology"), "data/change_params.rda", sep = "/"))
+  print("DEoptim Calibration has the can currently calibrate all 
+         of the following parameters within the following files:\n")
+  print(change_params[,1:2])
   calib_range=c("1999-12-31","2021-12-31")
   params_select=c(1,2,3,4,5,6,7,8,9,10,11,14,19,21,23,24,32,33)
   calib_params=change_params[params_select,]
