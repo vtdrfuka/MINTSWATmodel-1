@@ -1,5 +1,5 @@
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(SWATmodel,RSQLite,argparse,stringi,stringr,rgdal,ggplot2,rgeos,rnoaa,moments,sf,readr,tools,diffr)
+pacman::p_load(SWATmodel,RSQLite,argparse,stringi,stringr,rgdal,ggplot2,rgeos,rnoaa,moments,sf,readr,tools,diffobj)
 source("https://raw.githubusercontent.com/Rojakaveh/FillMissWX/main/FillMissWX.R")
 source("https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/build_wgn_file.R")
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/SWATmodel/R/readSWAT.R?root=ecohydrology")
