@@ -20,10 +20,7 @@ swat_objective_function_rch<-function (x, calib_range, calib_params, flowgage, r
   NS = NSeff(test3$Qm3ps, test3$FLOW_OUTcms)
   print(NS)
   if(save_results){
-    calibdir=paste0("../calib",format(Sys.time(),format="%Y%m%d%H%M"))
-    dir.create(calibdir)
-    file.copy(list.files(),calibdir)
-    
+    swatsqlite()
     for(diffname in grep("output|unixorig",grep(paste0(unique(calib_params[,1]),
         collapse = "|"),list.files(),value=TRUE),
         invert = TRUE,value=TRUE)){
@@ -36,9 +33,24 @@ swat_objective_function_rch<-function (x, calib_range, calib_params, flowgage, r
         write(paste0(diffname,":",junk1[difflocs]," < ",junk2[difflocs]),"calibdiffs.txt",append=TRUE)
       }
     }
+    calibdir=paste0("../calib",format(Sys.time(),format="%Y%m%d%H%M"))
+    dir.create(calibdir)
+    file.copy(list.files(),calibdir)
   }
   file.remove(list.files())
   setwd("../")
   file.remove(tmpdir)
   return(abs(NS - 1))
+}
+
+swatsqlite=function(){
+ output_hru=readSWAT("hru",".")
+ output_sub=readSWAT("sub",".")
+ output_rch=readSWAT("rch",".")
+ sqlitefile=paste0("./",args$swatscen,"MINTSWATtables.sqlite")
+ con <- dbConnect(RSQLite::SQLite(), sqlitefile)
+ dbWriteTable(con, "output_hru", output_hru,overwrite = TRUE)
+ dbWriteTable(con, "output_rch", output_rch,overwrite = TRUE)
+ dbWriteTable(con, "output_sub", output_sub,overwrite = TRUE)
+ dbListTables(con)
 }
