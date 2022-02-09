@@ -1,15 +1,9 @@
+# If not using swat docker container:
+# system("svn checkout svn://scm.r-forge.r-project.org/svnroot/ecohydrology/"); install.packages(c("ecohydrology/pkg/EcoHydRology/","ecohydrology/pkg/SWATmodel/"),repos = NULL)
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(SWATmodel,RSQLite,argparse,stringi,stringr,rgdal,ggplot2,rgeos,rnoaa,moments,sf,readr,tools,diffobj)
-source("https://raw.githubusercontent.com/Rojakaveh/FillMissWX/main/FillMissWX.R")
-source("https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/build_wgn_file.R")
-source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/SWATmodel/R/readSWAT.R?root=ecohydrology")
-source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/EcoHydRology/R/setup_swatcal.R?root=ecohydrology")
-source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/EcoHydRology/R/swat_objective_function_rch.R?root=ecohydrology")
-source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/get_grdc_gage.R")
 source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/MINTSWATcalib.R")
-source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/swat_objective_function_rch.R")
 setwd("~")
-print(getwd())
 basedir=getwd()
 outbasedir=paste0(basedir,"/MINTSWATmodel_output")
 inbasedir=paste0(basedir,"/MINTSWATmodel_input")
@@ -30,7 +24,7 @@ parser$add_argument("-d","--swatiniturl", metavar="url to ArcSWAT init or GRDC f
 # geojson example 
 exampleargs=c("-d https://data.mint.isi.edu/files/files/geojson/guder.json")
 # GRDC Calibration example 
-exampleargs=c("-s calib01","-p GW_DELAY:12","-p deiter:3","-p rch:3","-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip")
+exampleargs=c("-s calib01","-p GW_DELAY:12","-p deiter:100","-p rch:3","-d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip")
 # ArcSWAT example 
 #exampleargs=c("-d https://raw.githubusercontent.com/vtdrfuka/MINTSWATmodel/main/tb_s2.zip")
 #
@@ -77,9 +71,8 @@ if(swatrun=="GRDC"){
   currentdir=getwd()
   unzip("../data.zip")
   stationbasins_shp=readOGR("stationbasins.geojson")
-#  for(filename in list.files(pattern = "_Q_Day")){
-  for(filename in list.files(pattern = "_Q_Day")[2]){
-      #    filename=list.files(pattern = "_Q_Day")[2]
+  for(filename in list.files(pattern = "_Q_Day")){
+#  for(filename in list.files(pattern = "_Q_Day")[2]){
     print(filename)    
     setwd(currentdir)
     flowgage=get_grdc_gage(filename)
@@ -140,7 +133,7 @@ if(swatrun=="GRDC"){
     build_wgn_file(metdata_df=WXData,declat=declat,declon=declon)
     if(!is.null(args$swatscen) && 
        substr(trimws(args$swatscen),1,5)=="calib"){
-       MINTSWATcalib()
+      MINTSWATcalib()
     }
 
     runSWAT2012()
