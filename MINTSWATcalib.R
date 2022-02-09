@@ -1,4 +1,5 @@
 MINTSWATcalib=function(){
+  # Function that runs through the calibration setup.
   save(readSWAT,file="readSWAT.R")
   change_params=""
   rm(change_params)
