@@ -26,7 +26,10 @@ jobs:
             --name test \
             -t ${IMAGE_NAME} \
             Rscript SWATMINT0.2.R -p GW_DELAY:12 -p deiter:2 -p rch:3 -s calib01 -d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip
-          docker copy test:/root/MINTSWATmodel_output MINTSWATmodel_output/
+
+      - name: Copy the output from the container
+        run: |
+          docker cp test:/root/MINTSWATmodel_output MINTSWATmodel_output/
 
       - uses: actions/upload-artifact@v2
         with:

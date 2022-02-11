@@ -20,10 +20,15 @@ jobs:
       - name: Build image
         run: |
           docker build . --tag $IMAGE_NAME
+          
       - name: Test R script
         run: |
-          docker run -t ${IMAGE_NAME} Rscript SWATMINT0.2.R -d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip
-          
+          docker run --name test -t ${IMAGE_NAME} Rscript SWATMINT0.2.R -d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip
+
+      - name: Copy the output from the container
+        run: |
+          docker cp test:/root/MINTSWATmodel_output MINTSWATmodel_output/
+
       - name: Login to DockerHub
         uses: docker/login-action@v1
         with:

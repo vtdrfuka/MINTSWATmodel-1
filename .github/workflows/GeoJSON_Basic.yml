@@ -23,7 +23,11 @@ jobs:
 
       - name: Test R script
         run: |
-          docker run -t ${IMAGE_NAME} Rscript SWATMINT0.2.R -d https://data.mint.isi.edu/files/files/geojson/guder.json
+          docker run --name test -t ${IMAGE_NAME} Rscript SWATMINT0.2.R -d https://data.mint.isi.edu/files/files/geojson/guder.json
+
+      - name: Copy the output from the container
+        run: |
+          docker cp test:/root/MINTSWATmodel_output MINTSWATmodel_output/
 
       - uses: actions/upload-artifact@v2
         with:
