@@ -1,7 +1,7 @@
 # If not using swat docker container:
 # system("svn checkout svn://scm.r-forge.r-project.org/svnroot/ecohydrology/"); install.packages(c("ecohydrology/pkg/EcoHydRology/","ecohydrology/pkg/SWATmodel/"),repos = NULL)
 if (!require("pacman")) install.packages("pacman")
-pacman::p_load(SWATmodel,RSQLite,argparse,stringi,stringr,rgdal,ggplot2,rgeos,rnoaa,moments,sf,readr,tools,diffobj)
+pacman::p_load(SWATmodel,RSQLite,argparse,stringi,stringr,rgdal,ggplot2,rgeos,rnoaa,moments,sf,readr,tools,diffobj,png,grid,gridExtra,ncdfgeom)
 source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/MINTSWATcalib.R")
 setwd("~")
 basedir=getwd()
@@ -136,6 +136,7 @@ if(swatrun=="GRDC"){
     }
 
     runSWAT2012()
+    SWAToutput()
     output_rch=readSWAT("rch",".")
     output_plot=merge(output_rch[output_rch$RCH==rch],flowgage$flowdata,by="mdate")
     output_plot=merge(output_plot,WXData,by.x="mdate",by.y="date")
@@ -188,9 +189,7 @@ if(dlfiletype=="json"){
     if(length(unique(junk$id))>minstns){break()}
     stradius=stradius*1.2
   }
-  pdf(file = paste0(basinoutdir,"/WXSummary.pdf"),width = 6,height = 4)
   WXData=FillMissWX(gCentroid(basin)$y,gCentroid(basin)$x,date_min = "1979-01-01",date_max = "2022-01-01", StnRadius = stradius,method = "IDW",alfa = 2)
-  dev.off()
   GRDC_mindate=min(WXData$date)
   GRDC_maxdate=max(WXData$date)
   AllDays=data.frame(date=seq(GRDC_mindate, by = "day", length.out = GRDC_maxdate-GRDC_mindate))
@@ -209,6 +208,7 @@ if(dlfiletype=="json"){
                    declat=declat, declon=declon, hist_wx=WXData)
   build_wgn_file(metdata_df=WXData,declat=declat,declon=declon)
   runSWAT2012()
+  SWAToutput()
   output_rch=readSWAT("rch",".")
   output_plot=merge(output_rch,WXData,by.x="mdate",by.y="date")
   output_plot$Qpredmm=output_plot$FLOW_OUTcms/(basin_area*10^6)*3600*24*1000
