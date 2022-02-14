@@ -73,7 +73,6 @@ if(swatrun=="GRDC"){
   unzip("../data.zip")
   stationbasins_shp=readOGR("stationbasins.geojson")
   for(filename in list.files(pattern = "_Q_Day")){
-#  for(filename in list.files(pattern = "_Q_Day")[2]){
     print(filename)    
     setwd(currentdir)
     flowgage=get_grdc_gage(filename)
@@ -112,9 +111,8 @@ if(swatrun=="GRDC"){
       stradius=stradius*1.2
     }
     basinoutdir=paste0(outbasedir,"/",basinid);dir.create(basinoutdir)
-    pdf(file = paste0(basinoutdir,"/","WXSummary.pdf"),width = 6,height = 4)
     WXData=FillMissWX(gCentroid(basin)$y,gCentroid(basin)$x,date_min = "1979-01-01",date_max = "2022-01-01", StnRadius = stradius,method = "IDW",alfa = 2)
-    dev.off()
+
     GRDC_mindate=min(WXData$date)
     GRDC_maxdate=max(WXData$date)
     AllDays=data.frame(date=seq(GRDC_mindate, by = "day", length.out = GRDC_maxdate-GRDC_mindate))
