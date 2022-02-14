@@ -37,8 +37,8 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: pdfs
-          path: MINTSWATmodel_output/*/*.pdf
+          name: output
+          path: MINTSWATmodel_output/
 
       - name: Push image
         run: |
