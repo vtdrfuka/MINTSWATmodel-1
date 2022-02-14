@@ -3,6 +3,7 @@
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(SWATmodel,RSQLite,argparse,stringi,stringr,rgdal,ggplot2,rgeos,rnoaa,moments,sf,readr,tools,diffobj,png,grid,gridExtra,ncdfgeom)
 source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/MINTSWATcalib.R")
+source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/SWAToutput.R")
 setwd("~")
 basedir=getwd()
 outbasedir=paste0(basedir,"/MINTSWATmodel_output")
