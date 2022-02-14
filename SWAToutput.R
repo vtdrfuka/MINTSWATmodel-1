@@ -1,5 +1,5 @@
 
-SWATtoSQLite=function(){
+SWAToutput=function(){
  output_hru=readSWAT("hru",".")
  output_sub=readSWAT("sub",".")
  output_rch=readSWAT("rch",".")
