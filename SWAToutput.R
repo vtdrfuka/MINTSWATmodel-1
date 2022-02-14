@@ -1,4 +1,3 @@
-
 SWAToutput=function(){
  output_hru=readSWAT("hru",".")
  output_sub=readSWAT("sub",".")
