@@ -31,8 +31,8 @@ jobs:
 
       - uses: actions/upload-artifact@v2
         with:
-          name: pdfs
-          path: MINTSWATmodel_output/*/*.pdf
+          name: output
+          path: MINTSWATmodel_output/
 
       - name: Login to DockerHub
         uses: docker/login-action@v1
