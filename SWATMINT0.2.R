@@ -77,6 +77,7 @@ if(swatrun=="GRDC"){
     print(filename)    
     setwd(currentdir)
     flowgage=get_grdc_gage(filename)
+    if(is.null(flowgage)){print("Not enough Gage Info");next()}
     basinid=strsplit(filename,"_")[[1]][1]
     if(is.character(flowgage)){next()}
     GRDC_mindate=min(flowgage$flowdata$mdate)
