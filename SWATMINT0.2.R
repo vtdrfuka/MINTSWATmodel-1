@@ -21,7 +21,6 @@ parser$add_argument("-s","--swatscen", metavar="calib01",
                     help = "Scenario folder name, 'calib' for calibration, 'scen' for scenario")
 parser$add_argument("-d","--swatiniturl", metavar="url to ArcSWAT init or GRDC format dataset",
                     help = "Scenario folder name")
-
 # Examples:
 # geojson example 
 exampleargs=c("-d https://data.mint.isi.edu/files/files/geojson/guder.json")
