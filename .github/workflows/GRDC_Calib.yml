@@ -36,10 +36,10 @@ jobs:
           name: Output
           path: MINTSWATmodel_output/
       
-      - name: Check if the GW_DELAY has been changed
-        run: |
-          grep -rh GW_DELAY . | awk {'print $1'} | grep 12
-
+#      - name: Check if the GW_DELAY has been changed
+#        run: |
+#          grep -rh GW_DELAY . | awk {'print $1'} | grep 12
+#
           
       - name: Login to DockerHub
         uses: docker/login-action@v1
