@@ -75,7 +75,7 @@ if(swatrun=="GRDC"){
   for(filename in list.files(pattern = "_Q_Day")){
     print(filename)    
     setwd(currentdir)
-    flowgage=get_grdc_gage(filename)
+    flowgage=get_grdc_gage(lfilename =  grdcfilename)
     if(is.null(flowgage)){print("Not enough Gage Info");next()}
     basinid=strsplit(filename,"_")[[1]][1]
     if(is.character(flowgage)){next()}
