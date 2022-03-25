@@ -73,12 +73,12 @@ if(swatrun=="GRDC"){
   currentdir=getwd()
   unzip("../data.zip")
   stationbasins_shp=readOGR("stationbasins.geojson")
-  for(filename in list.files(pattern = "_Q_Day")){
-    print(filename)    
+  for(grdcfilename in list.files(pattern = "_Q_Day")){
+    print(grdcfilename)    
     setwd(currentdir)
     flowgage=get_grdc_gage(lfilename =  grdcfilename)
     if(is.null(flowgage)){print("Not enough Gage Info");next()}
-    basinid=strsplit(filename,"_")[[1]][1]
+    basinid=strsplit(grdcfilename,"_")[[1]][1]
     if(is.character(flowgage)){next()}
     GRDC_mindate=min(flowgage$flowdata$mdate)
     GRDC_maxdate=max(flowgage$flowdata$mdate)
