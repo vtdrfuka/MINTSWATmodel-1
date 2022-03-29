@@ -88,6 +88,60 @@ if(swatrun=="GRDC"){
     proj4_utm = paste0("+proj=utm +zone=", trunc((180+declon)/6+1), " +datum=WGS84 +units=m +no_defs")
     print(proj4_utm)
     basin_area=flowgage$area
+    # Building 3 basin Feature for NetCDF based on basin shape if available
+    # or a virtual circular basins on area and outlet. 
+    if(any(stationbasins_shp@data$grdc_no==basinid)){
+      subs1_shp=subset(stationbasins_shp,grdc_no==basinid)
+      proj4_utm = paste0("+proj=utm +zone=", trunc((180+gCentroid(subs1_shp)$x)/6+1), " +datum=WGS84 +units=m +no_defs")
+      proj4_ll = "+proj=longlat"
+      crs_ll=CRS(proj4_ll)
+      crs_utm=CRS(proj4_utm)
+      subs1_shp_utm=spTransform(subs1_shp,crs_utm)
+      initsizeguess=-sqrt(gArea(subs1_shp_utm))/6
+      f <- function (x,a) {(gArea(subs1_shp_utm)*a-
+          gArea(gBuffer(subs1_shp_utm,width=x)))^2}
+      hru3scale <- optimize(f, c(initsizeguess, 0), tol = 0.0001,a=1/3)$minimum
+      hru2scale <- optimize(f, c(initsizeguess, 0), tol = 0.0001,a=2/3)$minimum
+      hru3_utm=gBuffer(subs1_shp_utm,width=hru3scale)
+      hru2_utm=gBuffer(subs1_shp_utm,width=hru2scale)
+      gArea(hru2_utm)/gArea(subs1_shp_utm)
+      gArea(hru3_utm)/gArea(subs1_shp_utm)
+      hru1_utm=gDifference(subs1_shp_utm,hru2_utm)
+      hru2_utm=gDifference(hru2_utm,hru3_utm)
+
+      combined_hrus=list(c(hru1_utm,hru2_utm,hru3_utm))
+      list(combined_hrus, makeUniqueIDs = T) %>% 
+        flatten() %>% 
+        do.call(rbind, .)
+      subs1_shp_utm <- do.call(bind, combined_hrus)
+      subs1_shp_ll=spTransform(subs1_shp_utm,crs_ll)
+    } else{
+      latlon <- cbind(declon,declat)
+      gagepoint_ll <- SpatialPoints(latlon)
+      proj4string(gagepoint_ll)=proj4_ll
+      gagepoint_utm=spTransform(gagepoint_ll,crs_utm)
+      hru1_utm=spCircle(sqrt(basin_area*1000^2/pi), spUnits = crs_utm,
+           centerPoint = c(x = gagepoint_utm@coords[1], y = gagepoint_utm@coords[2]),
+           nptsPerimeter = 30,spID = 1)$spCircle
+      hru2_utm=spCircle(sqrt(basin_area*2/3*1000^2/pi), spUnits = crs_utm,
+                        centerPoint = c(x = gagepoint_utm@coords[1], y = gagepoint_utm@coords[2]),
+                        nptsPerimeter = 30,spID = 1 )$spCircle
+      hru3_utm=spCircle(sqrt(basin_area/3*1000^2/pi), spUnits = crs_utm,
+                        centerPoint = c(x = gagepoint_utm@coords[1], y = gagepoint_utm@coords[2]),
+                        nptsPerimeter = 30,spID = 1 )$spCircle
+      hru1_utm=gDifference(hru1_utm,hru2_utm)
+      hru2_utm=gDifference(hru2_utm,hru3_utm)
+      
+      combined_hrus=list(c(hru1_utm,hru2_utm,hru3_utm))
+      list(combined_hrus, makeUniqueIDs = T) %>% 
+        flatten() %>% 
+        do.call(rbind, .)
+      subs1_shp_utm <- do.call(bind, combined_hrus)
+      proj4string(subs1_shp_utm)=proj4_utm
+      subs1_shp_ll=spTransform(subs1_shp_utm,crs_ll)
+      
+    }
+    
     if(length(try(which(stationbasins_shp$grdc_no==as.numeric(flowgage$id))))>0){
       basinloc=which(stationbasins_shp$grdc_no==as.numeric(flowgage$id))
       basin=stationbasins_shp[basinloc,]
