@@ -80,6 +80,7 @@ if(swatrun=="GRDC"){
     flowgage=get_grdc_gage(lfilename =  grdcfilename)
     if(is.null(flowgage)){print("Not enough Gage Info");next()}
     basinid=strsplit(grdcfilename,"_")[[1]][1]
+    basinname=basinid
     if(is.character(flowgage)){next()}
     GRDC_mindate=min(flowgage$flowdata$mdate)
     GRDC_maxdate=max(flowgage$flowdata$mdate)
