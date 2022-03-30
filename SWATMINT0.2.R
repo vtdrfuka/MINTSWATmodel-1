@@ -278,7 +278,11 @@ if(dlfiletype=="json"){
   
 }
 
-
+setwd(outbasedir)
+unlink(list.files(pattern = "output.*",recursive = TRUE))
+unlink(list.files(pattern = "*.out",recursive = TRUE))
+unlink(list.files(pattern = "pcp1.pcp",recursive = TRUE))
+unlink(list.files(pattern = "tmp1.tmp",recursive = TRUE))
 quit()
 
 # Good study to compare P/Q S against CN from:
