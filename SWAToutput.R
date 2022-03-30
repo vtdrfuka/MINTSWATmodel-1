@@ -1,4 +1,4 @@
-SWAToutput=function(outnetcdf_cf=TRUE,outsqlite=TRUE,outplot=TRUE,cleanswatoutput=TRUE){
+SWAToutput=function(outnetcdf_cf=TRUE,outsqlite=TRUE,outplot=TRUE,cleanswatoutput=FALSE){
 # Requires being in a SWAT TxtInOut Dir and WXData dataframe
   output_hru=readSWAT("hru",".")
   output_sub=readSWAT("sub",".")
