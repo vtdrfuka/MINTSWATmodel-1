@@ -205,6 +205,8 @@ if(dlfiletype=="json"){
   basin=readOGR("data.json")
   declat=gCentroid(basin)$y
   declon=gCentroid(basin)$x
+  basinutm=spTransform(basin,CRS(proj4_utm))
+  basin_area=gArea(basinutm)/10^6
 
   # Replace with conversion of geojson
   proj4_utm = paste0("+proj=utm +zone=", trunc((180+declon)/6+1), " +datum=WGS84 +units=m +no_defs")
@@ -236,8 +238,6 @@ if(dlfiletype=="json"){
   proj4string(subs1_shp_utm)=proj4_utm
   subs1_shp_ll=spTransform(subs1_shp_utm,crs_ll)
 # End replace with GeoJSON conversion
-  basinutm=spTransform(basin,CRS(proj4_utm))
-  basin_area=gArea(basinutm)/10^6
   stradius=20;minstns=30
   station_data=ghcnd_stations()
   while(stradius<2000){
