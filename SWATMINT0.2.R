@@ -264,7 +264,7 @@ if(dlfiletype=="json"){
   WXData$TMN=WXData$MinTemp
   WXData$TMN[is.na(WXData$TMN)]=-99
   WXData$DATE=WXData$date
-  build_swat_basic(dirname=basinname, iyr=min(year(WXData$DATE),na.rm=T), 
+  build_swat_basic(dirname=basinoutdir, iyr=min(year(WXData$DATE),na.rm=T), 
                    nbyr=(max(year(WXData$DATE),na.rm=T)-min(year(WXData$DATE),na.rm=T)), 
                    wsarea=basin_area, elev=mean(WXData$prcpElevation,na.rm=T), 
                    declat=declat, declon=declon, hist_wx=WXData)
