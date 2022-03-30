@@ -205,15 +205,14 @@ if(dlfiletype=="json"){
   basin=readOGR("data.json")
   declat=gCentroid(basin)$y
   declon=gCentroid(basin)$x
-  basinutm=spTransform(basin,CRS(proj4_utm))
-  basin_area=gArea(basinutm)/10^6
-
-  # Replace with conversion of geojson
   proj4_utm = paste0("+proj=utm +zone=", trunc((180+declon)/6+1), " +datum=WGS84 +units=m +no_defs")
   proj4_ll = "+proj=longlat"
   crs_ll=CRS(proj4_ll)
   crs_utm=CRS(proj4_utm)
+  basinutm=spTransform(basin,CRS(proj4_utm))
+  basin_area=gArea(basinutm)/10^6
 
+  # Replace with conversion of geojson
   latlon <- cbind(declon,declat)
   gagepoint_ll <- SpatialPoints(latlon)
   proj4string(gagepoint_ll)=proj4_ll
