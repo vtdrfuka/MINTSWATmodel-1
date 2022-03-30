@@ -207,32 +207,35 @@ if(dlfiletype=="json"){
   declon=gCentroid(basin)$x
 
   # Replace with conversion of geojson
+  proj4_utm = paste0("+proj=utm +zone=", trunc((180+declon)/6+1), " +datum=WGS84 +units=m +no_defs")
+  proj4_ll = "+proj=longlat"
+  crs_ll=CRS(proj4_ll)
+  crs_utm=CRS(proj4_utm)
+
   latlon <- cbind(declon,declat)
-      gagepoint_ll <- SpatialPoints(latlon)
-      proj4string(gagepoint_ll)=proj4_ll
-      gagepoint_utm=spTransform(gagepoint_ll,crs_utm)
-      hru1_utm=spCircle(sqrt(basin_area*1000^2/pi), spUnits = crs_utm,
+  gagepoint_ll <- SpatialPoints(latlon)
+  proj4string(gagepoint_ll)=proj4_ll
+  gagepoint_utm=spTransform(gagepoint_ll,crs_utm)
+  hru1_utm=spCircle(sqrt(basin_area*1000^2/pi), spUnits = crs_utm,
            centerPoint = c(x = gagepoint_utm@coords[1], y = gagepoint_utm@coords[2]),
            nptsPerimeter = 30,spID = 1)$spCircle
-      hru2_utm=spCircle(sqrt(basin_area*2/3*1000^2/pi), spUnits = crs_utm,
+  hru2_utm=spCircle(sqrt(basin_area*2/3*1000^2/pi), spUnits = crs_utm,
                         centerPoint = c(x = gagepoint_utm@coords[1], y = gagepoint_utm@coords[2]),
                         nptsPerimeter = 30,spID = 1 )$spCircle
-      hru3_utm=spCircle(sqrt(basin_area/3*1000^2/pi), spUnits = crs_utm,
+  hru3_utm=spCircle(sqrt(basin_area/3*1000^2/pi), spUnits = crs_utm,
                         centerPoint = c(x = gagepoint_utm@coords[1], y = gagepoint_utm@coords[2]),
                         nptsPerimeter = 30,spID = 1 )$spCircle
-      hru1_utm=gDifference(hru1_utm,hru2_utm)
-      hru2_utm=gDifference(hru2_utm,hru3_utm)
+  hru1_utm=gDifference(hru1_utm,hru2_utm)
+  hru2_utm=gDifference(hru2_utm,hru3_utm)
       
-      combined_hrus=list(c(hru1_utm,hru2_utm,hru3_utm))
-      list(combined_hrus, makeUniqueIDs = T) %>% 
+  combined_hrus=list(c(hru1_utm,hru2_utm,hru3_utm))
+  list(combined_hrus, makeUniqueIDs = T) %>% 
         flatten() %>% 
         do.call(rbind, .)
-      subs1_shp_utm <- do.call(bind, combined_hrus)
-      proj4string(subs1_shp_utm)=proj4_utm
-      subs1_shp_ll=spTransform(subs1_shp_utm,crs_ll)
+  subs1_shp_utm <- do.call(bind, combined_hrus)
+  proj4string(subs1_shp_utm)=proj4_utm
+  subs1_shp_ll=spTransform(subs1_shp_utm,crs_ll)
 # End replace with GeoJSON conversion
-  proj4_utm = paste0("+proj=utm +zone=", trunc((180+declon)/6+1), " +datum=WGS84 +units=m +no_defs")
-  print(proj4_utm)
   basinutm=spTransform(basin,CRS(proj4_utm))
   basin_area=gArea(basinutm)/10^6
   stradius=20;minstns=30
