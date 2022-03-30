@@ -188,6 +188,7 @@ if(swatrun=="GRDC"){
                      wsarea=basin_area, elev=mean(WXData$prcpElevation,na.rm=T), 
                      declat=declat, declon=declon, hist_wx=WXData)
     build_wgn_file(metdata_df=WXData,declat=declat,declon=declon)
+
     if(!is.null(args$swatscen) && 
        substr(trimws(args$swatscen),1,5)=="calib"){
       MINTSWATcalib()
@@ -204,6 +205,32 @@ if(dlfiletype=="json"){
   basin=readOGR("data.json")
   declat=gCentroid(basin)$y
   declon=gCentroid(basin)$x
+
+  # Replace with conversion of geojson
+  latlon <- cbind(declon,declat)
+      gagepoint_ll <- SpatialPoints(latlon)
+      proj4string(gagepoint_ll)=proj4_ll
+      gagepoint_utm=spTransform(gagepoint_ll,crs_utm)
+      hru1_utm=spCircle(sqrt(basin_area*1000^2/pi), spUnits = crs_utm,
+           centerPoint = c(x = gagepoint_utm@coords[1], y = gagepoint_utm@coords[2]),
+           nptsPerimeter = 30,spID = 1)$spCircle
+      hru2_utm=spCircle(sqrt(basin_area*2/3*1000^2/pi), spUnits = crs_utm,
+                        centerPoint = c(x = gagepoint_utm@coords[1], y = gagepoint_utm@coords[2]),
+                        nptsPerimeter = 30,spID = 1 )$spCircle
+      hru3_utm=spCircle(sqrt(basin_area/3*1000^2/pi), spUnits = crs_utm,
+                        centerPoint = c(x = gagepoint_utm@coords[1], y = gagepoint_utm@coords[2]),
+                        nptsPerimeter = 30,spID = 1 )$spCircle
+      hru1_utm=gDifference(hru1_utm,hru2_utm)
+      hru2_utm=gDifference(hru2_utm,hru3_utm)
+      
+      combined_hrus=list(c(hru1_utm,hru2_utm,hru3_utm))
+      list(combined_hrus, makeUniqueIDs = T) %>% 
+        flatten() %>% 
+        do.call(rbind, .)
+      subs1_shp_utm <- do.call(bind, combined_hrus)
+      proj4string(subs1_shp_utm)=proj4_utm
+      subs1_shp_ll=spTransform(subs1_shp_utm,crs_ll)
+# End replace with GeoJSON conversion
   proj4_utm = paste0("+proj=utm +zone=", trunc((180+declon)/6+1), " +datum=WGS84 +units=m +no_defs")
   print(proj4_utm)
   basinutm=spTransform(basin,CRS(proj4_utm))
@@ -246,29 +273,6 @@ if(dlfiletype=="json"){
   output_plot=merge(output_rch,WXData,by.x="mdate",by.y="date")
   output_plot$Qpredmm=output_plot$FLOW_OUTcms/(basin_area*10^6)*3600*24*1000
   output_plot$Qmm=output_plot$Qm3ps/(basin_area*10^6)*3600*24/10
-  
-  maxRange <- 1.1*(max(output_plot$P,na.rm = T) + max(output_plot$Qpredmm,na.rm = T))
-  
-  p1<- ggplot() +
-    # Use geom_tile to create the inverted hyetograph. geom_tile has a bug that displays a warning message for height and width, you can ignore it.
-    geom_tile(data = output_plot, aes(x=date,y = -1*(P/2-maxRange), # y = the center point of each bar
-                                      height = P,width = 1),
-              fill = "black",
-              color = "black") +
-    # Plot your discharge data
-    geom_line(data=output_plot,aes(x=date, y = Qpredmm, colour= "Qpred"), size=1) +
-    scale_colour_manual("",breaks = c("Qmm", "Qpred"),values = c("red", "blue")) +
-    # Create a second axis with sec_axis() and format the labels to display the original precipitation units.
-    scale_y_continuous(name = "Discharge (mm/day)",
-                       sec.axis = sec_axis(trans = ~-1*(.-maxRange),
-                                           name = "Precipitation (mm/day)"))+
-    scale_x_continuous(name = NULL,labels = NULL)+
-    ggtitle(toupper(basinname))
-  pdf(file = paste0(basinoutdir,"/","HydroSummary.pdf"),width = 6,height = 4)
-  p1
-  dev.off()
-  
-  # first weather generator function
   
 }
 
