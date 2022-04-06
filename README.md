@@ -16,17 +16,11 @@ Run the image
 $ docker run -ti mintproject/MINTSWATmodel bash
 ```
 
-Download the data from GRDC
-
-```bash
-$ wget ...
-```
-
 
 Run the initialization scripts
 
 ```bash
-$ Rscript SandBoxMINT.R 
+$  Rscript SWATMINT0.2.R -p deiter:10 -p rch:3 -s calib01 -d https://bit.ly/grdcdownload_external_331d632e-deba-44c2-9ed8-396d646adb8d_2021-12-03_19-13_zip
 ```
 
 ## Old documentation
