@@ -5,7 +5,7 @@
 # system("svn checkout svn://scm.r-forge.r-project.org/svnroot/ecohydrology/"); install.packages(c("ecohydrology/pkg/EcoHydRology/","ecohydrology/pkg/SWATmodel/"),repos = NULL)
 if (!require("pacman")) install.packages("pacman")
 pacman::p_load(SWATmodel,RSQLite,argparse,stringi,stringr,rgdal,ggplot2,rgeos,rnoaa,moments,sf,readr,tools,
-               diffobj,png,grid,gridExtra,ncdfgeom,purrr,raster,sampSurf)
+               diffobj,png,grid,gridExtra,ncdfgeom,purrr,raster,sampSurf,parallelly)
 source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/MINTSWATcalib.R")
 source("https://raw.githubusercontent.com/mintproject/MINTSWATmodel/main/SWAToutput.R")
 source("https://r-forge.r-project.org/scm/viewvc.php/*checkout*/pkg/EcoHydRology/R/get_grdc_gage.R?root=ecohydrology")
